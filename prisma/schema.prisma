@@ -1,0 +1,38 @@
+// Prisma schema for Neon Radio - Multi-station online radio platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Station {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  language    String   @default("Español")
+  color       String   @default("#ec4899") // neon accent color (hex)
+  coverUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  songs       Song[]
+}
+
+model Song {
+  id          String   @id @default(cuid())
+  title       String
+  artist      String
+  audioUrl    String
+  duration    Int      @default(180) // duration in seconds
+  coverUrl    String?
+  order       Int      @default(0)
+  stationId   String
+  station     Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([stationId, order])
+}
