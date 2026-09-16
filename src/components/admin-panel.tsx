@@ -38,6 +38,7 @@ import {
 } from 'lucide-react'
 import { formatTime } from '@/lib/radio'
 import { cn } from '@/lib/utils'
+import { UrlAudioTester } from '@/components/url-audio-tester'
 
 type StationWithSongs = Station & { songs: Song[] }
 
@@ -735,18 +736,7 @@ function AddSongDialog({
               placeholder="Nombre del artista"
             />
           </div>
-          <div className="space-y-2">
-            <Label>URL del audio *</Label>
-            <Input
-              value={audioUrl}
-              onChange={(e) => setAudioUrl(e.target.value)}
-              placeholder="https://…/cancion.mp3"
-              type="url"
-            />
-            <p className="text-[11px] text-muted-foreground">
-              Enlace directo al archivo MP3, M4A, OGG o stream.
-            </p>
-          </div>
+          <UrlAudioTester url={audioUrl} onUrlChange={setAudioUrl} />
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Duración (segundos)</Label>
@@ -824,10 +814,7 @@ function EditSongDialog({
             <Label>Artista</Label>
             <Input value={artist} onChange={(e) => setArtist(e.target.value)} />
           </div>
-          <div className="space-y-2">
-            <Label>URL del audio</Label>
-            <Input value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} type="url" />
-          </div>
+          <UrlAudioTester url={audioUrl} onUrlChange={setAudioUrl} />
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Duración (segundos)</Label>
