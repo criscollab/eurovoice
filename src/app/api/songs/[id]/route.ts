@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getAdminSession } from '@/lib/auth'
 
 interface Params {
   params: Promise<{ id: string }>
@@ -7,10 +8,18 @@ interface Params {
 
 /**
  * PATCH /api/songs/[id]
- * Updates a song's metadata or order.
+ * Admin-only — requires authenticated session.
  */
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
+    const session = await getAdminSession()
+    if (!session) {
+      return NextResponse.json(
+        { error: 'No autorizado. Inicia sesión como administrador.' },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
     const body = await req.json()
     const { title, artist, audioUrl, duration, coverUrl, order } = body || {}
@@ -47,10 +56,18 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 /**
  * DELETE /api/songs/[id]
- * Deletes a song.
+ * Admin-only — requires authenticated session.
  */
 export async function DELETE(_req: NextRequest, { params }: Params) {
   try {
+    const session = await getAdminSession()
+    if (!session) {
+      return NextResponse.json(
+        { error: 'No autorizado. Inicia sesión como administrador.' },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
     const existing = await db.song.findUnique({ where: { id } })
     if (!existing) {

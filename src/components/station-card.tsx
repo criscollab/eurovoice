@@ -20,21 +20,19 @@ export function StationCard({ station }: { station: StationWithCount }) {
     <button
       onClick={() => setActiveStation(station)}
       className={cn(
-        'group relative w-full overflow-hidden rounded-2xl border p-5 text-left transition-all',
-        'hover:-translate-y-1 hover:shadow-2xl',
-        isActive ? 'border-transparent' : 'border-white/5 hover:border-white/15'
+        'group relative w-full overflow-hidden rounded-2xl border bg-card p-5 text-left shadow-sm transition-all',
+        'hover:-translate-y-1 hover:shadow-lg',
+        isActive ? 'border-transparent' : 'border-border hover:border-primary/40'
       )}
       style={{
-        background:
-          'linear-gradient(135deg, color-mix(in oklch, var(--card) 80%, transparent) 0%, color-mix(in oklch, var(--card) 40%, transparent) 100%)',
         boxShadow: isActive
-          ? `0 0 0 2px ${accent}, 0 0 40px -6px ${accent}`
+          ? `0 0 0 2px ${accent}, 0 8px 24px -6px ${accent}55`
           : undefined,
       }}
     >
       {/* Decorative glow */}
       <div
-        className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-30 blur-2xl transition-opacity group-hover:opacity-60"
+        className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-20 blur-2xl transition-opacity group-hover:opacity-40"
         style={{ background: accent }}
       />
 
@@ -50,7 +48,7 @@ export function StationCard({ station }: { station: StationWithCount }) {
             className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider"
             style={{
               color: accent,
-              background: `color-mix(in oklch, ${accent} 18%, transparent)`,
+              background: `color-mix(in oklch, ${accent} 15%, transparent)`,
             }}
           >
             <span
@@ -60,7 +58,7 @@ export function StationCard({ station }: { station: StationWithCount }) {
             En vivo
           </span>
         ) : (
-          <span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+          <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-medium text-secondary-foreground">
             {station._count.songs} {station._count.songs === 1 ? 'canción' : 'canciones'}
           </span>
         )}
@@ -86,7 +84,7 @@ export function StationCard({ station }: { station: StationWithCount }) {
       )}
 
       {/* Footer: now playing or play CTA */}
-      <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3">
+      <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3">
         {isActive ? (
           <div className="flex items-center gap-2">
             <span style={{ color: accent }}>

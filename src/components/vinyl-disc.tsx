@@ -6,10 +6,11 @@ import { cn } from '@/lib/utils'
  * VinylDisc
  * SVG-based vinyl record that spins while playing.
  * Color can be tinted to match the station's accent color.
+ * Works on both light and dark themes.
  */
 export function VinylDisc({
   spinning = true,
-  color = '#ec4899',
+  color = '#3b82f6',
   size = 64,
   className = '',
 }: {
@@ -32,7 +33,7 @@ export function VinylDisc({
         style={{
           background:
             'radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 28%, #161616 30%, #0a0a0a 100%)',
-          boxShadow: `0 0 0 2px rgba(0,0,0,0.4), 0 0 24px -4px ${color}99`,
+          boxShadow: `0 0 0 2px rgba(0,0,0,0.2), 0 2px 12px -2px ${color}77`,
         }}
       >
         {/* concentric grooves */}

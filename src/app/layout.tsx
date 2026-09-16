@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { SessionProviderWrapper } from "@/components/session-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,18 +15,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Neón Radio — Radio online multi-emisora 24/7",
-  description: "Plataforma de radio online con múltiples emisoras transmitiendo música en distintos idiomas, 24/7. Administra tus propias emisoras y playlists.",
-  keywords: ["radio online", "radio 24/7", "emisoras", "streaming", "música", "neón radio"],
-  authors: [{ name: "Neón Radio" }],
+  title: "Euro Voice — Radio online multi-emisora 24/7",
+  description: "Sintoniza emisoras en vivo y escucha música en distintos idiomas, 24/7, cuando quieras y donde quieras.",
+  keywords: ["radio online", "radio 24/7", "emisoras", "streaming", "música", "euro voice"],
+  authors: [{ name: "Euro Voice" }],
   openGraph: {
-    title: "Neón Radio",
+    title: "Euro Voice",
     description: "Radio online multi-emisora 24/7",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Neón Radio",
+    title: "Euro Voice",
     description: "Radio online multi-emisora 24/7",
   },
 };
@@ -40,7 +41,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
+        <SessionProviderWrapper>{children}</SessionProviderWrapper>
         <Toaster />
       </body>
     </html>

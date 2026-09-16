@@ -200,13 +200,12 @@ export function StickyPlayer() {
       {/* Player container */}
       <div
         className={cn(
-          'fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-xl transition-all',
+          'fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 backdrop-blur-xl transition-all',
           expanded ? 'h-[88vh] rounded-t-2xl' : 'h-auto'
         )}
         style={{
-          background: 'color-mix(in oklch, var(--card) 88%, transparent)',
-          borderColor: `color-mix(in oklch, ${accent} 30%, transparent)`,
-          boxShadow: `0 -8px 40px -8px color-mix(in oklch, ${accent} 35%, transparent)`,
+          borderColor: `color-mix(in oklch, ${accent} 25%, var(--border))`,
+          boxShadow: `0 -8px 32px -8px color-mix(in oklch, ${accent} 20%, transparent)`,
         }}
       >
         {/* Top accent bar */}
@@ -290,8 +289,8 @@ export function StickyPlayer() {
                   className="h-12 w-12 rounded-full p-0"
                   style={{
                     background: accent,
-                    color: '#0a0a0a',
-                    boxShadow: `0 0 24px -4px ${accent}aa`,
+                    color: '#ffffff',
+                    boxShadow: `0 4px 16px -2px ${accent}aa`,
                   }}
                   aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
                 >
@@ -317,7 +316,7 @@ export function StickyPlayer() {
                   {formatTime(progress)}
                 </span>
                 <div
-                  className="h-1 flex-1 overflow-hidden rounded-full bg-white/10"
+                  className="h-1 flex-1 overflow-hidden rounded-full bg-secondary"
                   role="progressbar"
                   aria-valuenow={Math.floor(progress)}
                   aria-valuemax={totalDuration}
@@ -423,7 +422,7 @@ function UpcomingPanel({ accent, stationId }: { accent: string; stationId: strin
   const currentIndex = nowPlaying?.index ?? -1
 
   return (
-    <div className="mt-2 max-h-[60vh] overflow-y-auto rounded-lg border border-white/5 bg-black/20 p-3">
+    <div className="mt-2 max-h-[60vh] overflow-y-auto rounded-lg border border-border/60 bg-secondary/40 p-3">
       <div className="mb-2 flex items-center gap-2">
         <Radio className="h-4 w-4" style={{ color: accent }} />
         <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

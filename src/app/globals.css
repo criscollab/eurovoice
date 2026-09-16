@@ -43,50 +43,50 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Neon Radio — always dark theme */
+/* Euro Voice — light theme with white & blue palette */
 :root {
   --radius: 0.875rem;
 
-  /* Dark background palette */
-  --background: oklch(0.08 0.012 290);
-  --foreground: oklch(0.97 0.005 290);
-  --card: oklch(0.13 0.015 290);
-  --card-foreground: oklch(0.97 0.005 290);
-  --popover: oklch(0.11 0.015 290);
-  --popover-foreground: oklch(0.97 0.005 290);
+  /* Light, airy backgrounds */
+  --background: oklch(0.99 0.005 240);   /* near-white with cool tint */
+  --foreground: oklch(0.18 0.02 245);   /* dark navy text */
+  --card: oklch(1 0 0);                  /* pure white */
+  --card-foreground: oklch(0.18 0.02 245);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 245);
 
-  /* Neon pink/purple primary */
-  --primary: oklch(0.7 0.27 330);
-  --primary-foreground: oklch(0.12 0.01 290);
+  /* Blue primary */
+  --primary: oklch(0.55 0.21 250);              /* blue-600 ish */
+  --primary-foreground: oklch(0.99 0.005 240); /* white */
 
-  --secondary: oklch(0.18 0.02 290);
-  --secondary-foreground: oklch(0.95 0.005 290);
+  --secondary: oklch(0.96 0.012 240);
+  --secondary-foreground: oklch(0.25 0.02 245);
 
-  --muted: oklch(0.18 0.015 290);
-  --muted-foreground: oklch(0.65 0.01 290);
+  --muted: oklch(0.97 0.008 240);
+  --muted-foreground: oklch(0.5 0.02 245);
 
-  --accent: oklch(0.22 0.04 330);
-  --accent-foreground: oklch(0.97 0.005 290);
+  --accent: oklch(0.95 0.03 240);
+  --accent-foreground: oklch(0.25 0.04 250);
 
-  --destructive: oklch(0.65 0.22 25);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.7 0.27 330);
+  --destructive: oklch(0.6 0.22 25);
+  --border: oklch(0.92 0.008 240);
+  --input: oklch(0.94 0.008 240);
+  --ring: oklch(0.55 0.21 250);
 
-  --chart-1: oklch(0.7 0.27 330);
-  --chart-2: oklch(0.65 0.24 280);
-  --chart-3: oklch(0.7 0.2 200);
-  --chart-4: oklch(0.75 0.22 60);
-  --chart-5: oklch(0.65 0.27 0);
+  --chart-1: oklch(0.55 0.21 250);
+  --chart-2: oklch(0.7 0.15 220);
+  --chart-3: oklch(0.65 0.18 280);
+  --chart-4: oklch(0.8 0.13 200);
+  --chart-5: oklch(0.6 0.2 30);
 
-  --sidebar: oklch(0.1 0.015 290);
-  --sidebar-foreground: oklch(0.97 0.005 290);
-  --sidebar-primary: oklch(0.7 0.27 330);
-  --sidebar-primary-foreground: oklch(0.12 0.01 290);
-  --sidebar-accent: oklch(0.22 0.04 330);
-  --sidebar-accent-foreground: oklch(0.97 0.005 290);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.7 0.27 330);
+  --sidebar: oklch(0.99 0.005 240);
+  --sidebar-foreground: oklch(0.18 0.02 245);
+  --sidebar-primary: oklch(0.55 0.21 250);
+  --sidebar-primary-foreground: oklch(0.99 0.005 240);
+  --sidebar-accent: oklch(0.95 0.03 240);
+  --sidebar-accent-foreground: oklch(0.25 0.04 250);
+  --sidebar-border: oklch(0.92 0.008 240);
+  --sidebar-ring: oklch(0.55 0.21 250);
 }
 
 @layer base {
@@ -96,17 +96,17 @@
   html, body {
     background: var(--background);
     color: var(--foreground);
-    /* Subtle radial neon glow background */
+    /* Subtle blue gradient background — airy and clean */
     background-image:
-      radial-gradient(circle at 12% 8%, color-mix(in oklch, var(--primary) 18%, transparent) 0%, transparent 38%),
-      radial-gradient(circle at 88% 12%, oklch(0.55 0.24 280 / 0.14) 0%, transparent 40%),
-      radial-gradient(circle at 50% 100%, oklch(0.6 0.2 200 / 0.10) 0%, transparent 55%);
+      radial-gradient(circle at 8% 0%, oklch(0.7 0.15 250 / 0.10) 0%, transparent 35%),
+      radial-gradient(circle at 92% 10%, oklch(0.65 0.18 220 / 0.08) 0%, transparent 38%),
+      radial-gradient(circle at 50% 110%, oklch(0.6 0.2 250 / 0.06) 0%, transparent 55%);
     background-attachment: fixed;
     min-height: 100vh;
   }
 }
 
-/* === Custom scrollbar (dark/neon) === */
+/* === Custom scrollbar (light blue) === */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -115,13 +115,13 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in oklch, var(--primary) 35%, transparent);
+  background: color-mix(in oklch, var(--primary) 25%, transparent);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklch, var(--primary) 60%, transparent);
+  background: color-mix(in oklch, var(--primary) 45%, transparent);
   background-clip: padding-box;
 }
 
@@ -164,16 +164,14 @@
   animation: fade-in-up 0.4s ease-out both;
 }
 
-/* Neon text glow utility */
-.neon-text {
-  text-shadow:
-    0 0 6px color-mix(in oklch, var(--primary) 65%, transparent),
-    0 0 18px color-mix(in oklch, var(--primary) 35%, transparent);
+/* Soft text shadow utility for emphasis on light bg */
+.text-soft-shadow {
+  text-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* Neon border glow utility */
-.neon-glow {
+/* Blue glow utility */
+.blue-glow {
   box-shadow:
-    0 0 0 1px color-mix(in oklch, var(--primary) 45%, transparent),
-    0 0 24px -4px color-mix(in oklch, var(--primary) 55%, transparent);
+    0 0 0 1px color-mix(in oklch, var(--primary) 30%, transparent),
+    0 4px 20px -4px color-mix(in oklch, var(--primary) 40%, transparent);
 }

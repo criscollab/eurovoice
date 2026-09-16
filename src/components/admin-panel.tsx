@@ -241,9 +241,9 @@ export function AdminPanel() {
     <Sheet open={adminOpen} onOpenChange={setAdminOpen}>
       <SheetContent
         side="right"
-        className="w-full overflow-hidden border-l-white/5 bg-background/95 p-0 sm:max-w-2xl"
+        className="w-full overflow-hidden border-l-border/60 bg-background p-0 sm:max-w-2xl"
       >
-        <SheetHeader className="border-b border-white/5 px-6 py-4">
+        <SheetHeader className="border-b border-border/60 px-6 py-4">
           <SheetTitle className="flex items-center gap-2 text-xl">
             <Music className="h-5 w-5 text-primary" />
             Panel de administración
@@ -263,7 +263,7 @@ export function AdminPanel() {
             </div>
 
             {loadedStations.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-white/10 p-6 text-center text-sm text-muted-foreground">
+              <p className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
                 Cargando emisoras…
               </p>
             ) : (
@@ -381,7 +381,7 @@ function StationAdminCard({
 
       {/* Songs list */}
       {expanded && (
-        <div className="border-t border-white/5 p-3">
+        <div className="border-t border-border/60 p-3">
           {songs.length === 0 ? (
             <p className="py-4 text-center text-xs text-muted-foreground">
               No hay canciones. Agrega la primera.
@@ -391,7 +391,7 @@ function StationAdminCard({
               {songs.map((song, index) => (
                 <li
                   key={song.id}
-                  className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-white/5"
+                  className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-secondary"
                 >
                   <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40" />
                   <span className="w-6 text-center text-[10px] tabular-nums text-muted-foreground">
@@ -439,7 +439,7 @@ function StationAdminCard({
                       href={song.audioUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-white/10"
+                      className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-secondary"
                       aria-label="Abrir audio"
                     >
                       <ExternalLink className="h-3 w-3" />
@@ -586,7 +586,7 @@ function CreateStationDialog({ onCreate }: { onCreate: (data: { name: string; de
                   type="color"
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
-                  className="h-10 w-16 cursor-pointer rounded-md border border-white/10 bg-transparent"
+                  className="h-10 w-16 cursor-pointer rounded-md border border-border bg-transparent"
                 />
                 <span className="text-sm tabular-nums text-muted-foreground">{color}</span>
               </div>
@@ -656,7 +656,7 @@ function EditStationDialog({
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="h-10 w-16 cursor-pointer rounded-md border border-white/10 bg-transparent"
+                className="h-10 w-16 cursor-pointer rounded-md border border-border bg-transparent"
               />
               <span className="text-sm tabular-nums text-muted-foreground">{color}</span>
             </div>

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getAdminSession } from '@/lib/auth'
 
 /**
  * GET /api/stations
- * Returns all stations with song count.
+ * Public — anyone can list stations.
  */
 export async function GET() {
   try {
@@ -25,10 +26,18 @@ export async function GET() {
 
 /**
  * POST /api/stations
- * Creates a new station.
+ * Admin-only — requires authenticated session.
  */
 export async function POST(req: NextRequest) {
   try {
+    const session = await getAdminSession()
+    if (!session) {
+      return NextResponse.json(
+        { error: 'No autorizado. Inicia sesión como administrador.' },
+        { status: 401 }
+      )
+    }
+
     const body = await req.json()
     const { name, description, language, color, coverUrl } = body || {}
 
