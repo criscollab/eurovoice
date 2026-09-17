@@ -66,6 +66,26 @@ export function StickyPlayer() {
     const tick = async () => {
       const np = await fetchNowPlaying()
       if (cancelled || !np) return
+
+      // Don't overwrite the nowPlaying state if we've already started playing
+      // a song that's different from what the server says should be playing.
+      // This happens when a song transitioned naturally (via onEnded) and
+      // we're now ahead of the server's timeline.
+      const currentNowPlaying = useRadioStore.getState().nowPlaying
+      if (
+        currentNowPlaying &&
+        currentNowPlaying.song.id !== np.song.id &&
+        // Only skip the server update if the user is actually listening
+        // (i.e., we've manually advanced to a different song)
+        useRadioStore.getState().isPlaying
+      ) {
+        console.log(`📡 Server says "${np.song.title}" but we're playing "${currentNowPlaying.song.title}" — skipping poll`)
+        // Schedule the next poll anyway
+        const nextDelay = Math.min(5000, Math.max(2000, (currentNowPlaying.remaining * 1000) - 1500))
+        pollTimerRef.current = setTimeout(tick, Math.max(2000, nextDelay))
+        return
+      }
+
       setNowPlaying(np)
       // Schedule the next poll well before the current song ends,
       // but no later than 5s.
@@ -219,27 +239,8 @@ export function StickyPlayer() {
         const nextSong = nowPlaying.nextSong
         console.log(`🎵 Next song: ${nextSong.title} (${nextSong.audioUrl})`)
 
-        // IMMEDIATELY swap the audio source — don't wait for state update cycle.
-        // This prevents the browser from staying paused on the old song.
-        const audio2 = audioRef.current
-        if (audio2) {
-          audio2.src = nextSong.audioUrl
-          audio2.load()
-
-          // Play as soon as metadata is loaded
-          const handlePlay = () => {
-            audio2.play().then(() => {
-              console.log(`✅ Now playing: ${nextSong.title}`)
-              setIsPlaying(true)
-            }).catch((e: any) => {
-              console.warn('Autoplay failed:', e?.message)
-              setIsPlaying(false)
-            })
-          }
-          audio2.addEventListener('loadedmetadata', handlePlay, { once: true })
-        }
-
         // Build a synthetic nowPlaying for the next song with offset 0
+        // and set it — the song-change effect will swap the audio src.
         const syntheticNowPlaying = {
           song: nextSong,
           index: nowPlaying.index + 1,
@@ -249,15 +250,17 @@ export function StickyPlayer() {
           nextSong: undefined,
           serverTime: Date.now(),
         }
+        // CRITICAL: reset lastSongIdRef BEFORE setNowPlaying so the song-change
+        // effect actually runs (otherwise it would skip because the id matches).
+        lastSongIdRef.current = null
         setNowPlaying(syntheticNowPlaying)
-        lastSongIdRef.current = nextSong.id
         setIsPlaying(true)
       } else {
         // Fallback: fetch from server
         fetchNowPlaying().then((np) => {
           if (np) {
-            setNowPlaying(np)
             lastSongIdRef.current = null
+            setNowPlaying(np)
             setIsPlaying(true)
           }
         })
