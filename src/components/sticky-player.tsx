@@ -5,6 +5,7 @@ import { useRadioStore } from '@/lib/radio-store'
 import { formatTime, getNextSongIndex, getPreviousSongIndex } from '@/lib/radio'
 import { VinylDisc } from '@/components/vinyl-disc'
 import { EqualizerBars } from '@/components/equalizer-bars'
+import { LyricsPanel } from '@/components/lyrics-panel'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import {
@@ -19,6 +20,7 @@ import {
   ChevronUp,
   ListMusic,
   Radio,
+  Mic2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { RepeatMode } from '@/lib/radio'
@@ -49,12 +51,14 @@ export function StickyPlayer() {
     repeatMode,
     cycleRepeatMode,
     playlistOpen,
+    setPlaylistOpen,
     togglePlaylist,
   } = useRadioStore()
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [progress, setProgress] = useState(0)
   const [loadingTrack, setLoadingTrack] = useState(false)
+  const [lyricsOpen, setLyricsOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const currentSong = currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null
@@ -405,8 +409,26 @@ export function StickyPlayer() {
                   className="hidden md:inline-flex h-9 w-9 md:h-10 md:w-10"
                   style={{ color: playlistOpen ? accent : undefined }}
                   aria-label="Ver cola de reproducción"
+                  title="Ver cola de reproducción"
                 >
                   <ListMusic className="h-4 w-4" />
+                </Button>
+
+                {/* Lyrics toggle */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setLyricsOpen((v) => !v)
+                    // If opening lyrics, close playlist to avoid both being open
+                    if (!lyricsOpen) setPlaylistOpen(false)
+                  }}
+                  className="hidden md:inline-flex h-9 w-9 md:h-10 md:w-10"
+                  style={{ color: lyricsOpen ? accent : undefined }}
+                  aria-label={lyricsOpen ? 'Cerrar letras' : 'Ver letra'}
+                  title={lyricsOpen ? 'Cerrar letras' : 'Ver letra de la canción'}
+                >
+                  <Mic2 className="h-4 w-4" />
                 </Button>
               </div>
 
@@ -496,6 +518,19 @@ export function StickyPlayer() {
           {/* Expanded playlist panel */}
           {playlistOpen && (
             <PlaylistPanel accent={accent} onSongClick={handleSongClick} />
+          )}
+
+          {/* Lyrics panel (optional, requires current song) */}
+          {lyricsOpen && currentSong && (
+            <LyricsPanel
+              songId={currentSong.id}
+              title={currentSong.title}
+              artist={currentSong.artist}
+              accent={accent}
+              currentTime={progress}
+              isPlaying={isPlaying}
+              onClose={() => setLyricsOpen(false)}
+            />
           )}
         </div>
       </div>
