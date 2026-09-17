@@ -5,7 +5,7 @@
  *   bun /home/z/my-project/scripts/verify-netlify.ts
  */
 
-const NETLIFY_BASE = 'https://dapper-marshmallow-482900.netlify.app'
+const NETLIFY_BASE = 'https://euro-voice.netlify.app'
 
 // Posibles nombres del archivo MP3
 const POSSIBLE_PATHS = [
