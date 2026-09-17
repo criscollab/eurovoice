@@ -1,4 +1,4 @@
-// Prisma schema for Neon Radio - Multi-station online radio platform
+// Prisma schema for Euro Voice - Multi-station online radio platform
 
 generator client {
   provider = "prisma-client-js"
@@ -14,7 +14,7 @@ model Station {
   name        String
   description String?
   language    String   @default("Español")
-  color       String   @default("#ec4899") // neon accent color (hex)
+  color       String   @default("#3b82f6") // blue accent color (hex)
   coverUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -29,10 +29,41 @@ model Song {
   duration    Int      @default(180) // duration in seconds
   coverUrl    String?
   order       Int      @default(0)
+  playCount   Int      @default(0) // how many times this song has been played
   stationId   String
   station     Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([stationId, order])
+  @@index([playCount]) // for top-songs query
+}
+
+/**
+ * ListenerSession
+ * Tracks a unique listener browser session. Used to count "current listeners"
+ * (sessions active in the last 60 seconds) and historical stats.
+ *
+ * A new row is created the first time a browser connects. Subsequent heartbeats
+ * just update `lastSeenAt`. Sessions older than 60 seconds are considered
+ * "offline" but kept for historical stats.
+ */
+model ListenerSession {
+  id          String   @id @default(cuid())
+  // A random ID generated client-side and stored in localStorage. Lets us
+  // recognize the same browser across visits without requiring login.
+  sessionId   String   @unique
+  // The station the listener is currently tuned to (null if none)
+  stationId   String?
+  // The country code detected from IP (e.g. "CO", "US", "LV"). Null if undetected.
+  country     String?
+  // The user-agent string of the browser (truncated for storage)
+  userAgent   String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([lastSeenAt])
+  @@index([stationId])
 }

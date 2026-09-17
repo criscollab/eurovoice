@@ -67,7 +67,7 @@ export default function Home() {
         <div className="flex flex-col items-start gap-4">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
             <span className="animate-live-pulse h-1.5 w-1.5 rounded-full bg-primary" />
-            En vivo 24/7
+            Música en vivo 24/7
           </span>
           <h2 className="text-balance text-4xl font-bold leading-tight tracking-tight md:text-6xl">
             Sintoniza y{' '}
@@ -78,8 +78,9 @@ export default function Home() {
           </h2>
           <p className="max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
             Varias emisoras en distintos idiomas transmitiendo música en vivo,
-            las 24 horas. Escucha cuando quieras, donde quieras — desde tu
-            computador, tu tablet o tu móvil. Solo elige una emisora y déjate llevar.
+            las 24 horas. Escucha cuando quieras, donde quieras — elige una
+            emisora, salta entre canciones, repite tus favoritas y arma tu
+            propia experiencia.
           </p>
           <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">

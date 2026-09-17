@@ -39,6 +39,9 @@ import {
 import { formatTime } from '@/lib/radio'
 import { cn } from '@/lib/utils'
 import { UrlAudioTester } from '@/components/url-audio-tester'
+import { AdminStats } from '@/components/admin-stats'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { BarChart3 } from 'lucide-react'
 
 type StationWithSongs = Station & { songs: Song[] }
 
@@ -255,35 +258,54 @@ export function AdminPanel() {
         </SheetHeader>
 
         <ScrollArea className="h-[calc(100vh-100px)]">
-          <div className="space-y-6 p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Emisoras ({loadedStations.length})
-              </h3>
-              <CreateStationDialog onCreate={handleCreateStation} />
-            </div>
+          <div className="p-6">
+            <Tabs defaultValue="stations">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="stations" className="flex items-center gap-2">
+                  <Music className="h-3.5 w-3.5" />
+                  Emisoras ({loadedStations.length})
+                </TabsTrigger>
+                <TabsTrigger value="stats" className="flex items-center gap-2">
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  Estadísticas
+                </TabsTrigger>
+              </TabsList>
 
-            {loadedStations.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
-                Cargando emisoras…
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {loadedStations.map((station) => (
-                  <StationAdminCard
-                    key={station.id}
-                    station={station}
-                    onEdit={() => setEditingStation(station)}
-                    onDelete={() => handleDeleteStation(station.id, station.name)}
-                    onAddSong={(data) => handleAddSong(station.id, data)}
-                    onMoveSong={(index, dir) => handleMoveSong(station.id, index, dir)}
-                    onDeleteSong={(songId) => handleDeleteSong(songId, station.id)}
-                    onUpdateSong={(songId, data) => handleUpdateSong(songId, station.id, data)}
-                    onUpdateStation={(data) => handleUpdateStation(station.id, data)}
-                  />
-                ))}
-              </div>
-            )}
+              <TabsContent value="stations" className="space-y-4 mt-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    Gestiona tus emisoras
+                  </h3>
+                  <CreateStationDialog onCreate={handleCreateStation} />
+                </div>
+
+                {loadedStations.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
+                    Cargando emisoras…
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {loadedStations.map((station) => (
+                      <StationAdminCard
+                        key={station.id}
+                        station={station}
+                        onEdit={() => setEditingStation(station)}
+                        onDelete={() => handleDeleteStation(station.id, station.name)}
+                        onAddSong={(data) => handleAddSong(station.id, data)}
+                        onMoveSong={(index, dir) => handleMoveSong(station.id, index, dir)}
+                        onDeleteSong={(songId) => handleDeleteSong(songId, station.id)}
+                        onUpdateSong={(songId, data) => handleUpdateSong(songId, station.id, data)}
+                        onUpdateStation={(data) => handleUpdateStation(station.id, data)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="stats" className="mt-0">
+                <AdminStats />
+              </TabsContent>
+            </Tabs>
           </div>
         </ScrollArea>
       </SheetContent>

@@ -1,81 +1,62 @@
 import { Station, Song } from '@prisma/client'
 
 /**
- * NowPlaying calculation result.
- * Represents what should be currently playing on a station at a given moment.
+ * Euro Voice — Personal mode radio logic.
+ *
+ * Each listener has their own queue. When they connect to a station, they
+ * start at the first song. They can:
+ *   - Play/pause
+ *   - Skip to next/previous song
+ *   - Click on any song in the playlist to jump to it
+ *   - Toggle repeat mode: off | all | one
+ *
+ * When a song ends naturally, the player advances to the next song (or
+ * repeats the current one if repeatMode === 'one'). If repeatMode === 'off'
+ * and we're at the last song, playback stops.
  */
-export interface NowPlaying {
-  song: Song
-  index: number
-  offset: number // seconds into the current song
-  remaining: number // seconds remaining in the current song
-  totalDuration: number // total playlist duration in seconds
-  nextSong?: Song // the next song in the circular queue
-  serverTime: number // server timestamp (ms) used for the calculation
+
+export type RepeatMode = 'off' | 'all' | 'one'
+
+/**
+ * Returns the initial song index for a listener joining a station.
+ * Default is 0 (first song), but could be randomized in the future.
+ */
+export function getInitialSongIndex(songs: Song[]): number {
+  if (!songs || songs.length === 0) return -1
+  return 0
 }
 
 /**
- * Calculates the currently playing song for a station based on a continuous timeline.
+ * Returns the next song index based on the current index and repeat mode.
  *
- * The station's playlist is treated as a circular queue that started playing at station.createdAt
- * and loops forever. Every listener connecting at the same moment hears the same song at the
- * same offset, simulating a live 24/7 broadcast.
- *
- * Algorithm:
- *  1. Sort songs by their `order` field.
- *  2. Compute total playlist duration = sum(song.duration).
- *  3. Elapsed seconds since station.createdAt = (now - createdAt) / 1000.
- *  4. Position in the circular playlist = elapsed % totalDuration.
- *  5. Walk the sorted list to find which song contains that position.
- *  6. Return the song, its offset, and remaining time.
+ * - repeatMode 'off': returns -1 if at last song (stop), otherwise index + 1
+ * - repeatMode 'all': wraps around to 0 if at last song, otherwise index + 1
+ * - repeatMode 'one': returns the same index (repeat current song)
  */
-export function computeNowPlaying(
-  station: Pick<Station, 'createdAt'>,
-  songs: Song[],
-  now: number = Date.now()
-): NowPlaying | null {
-  if (!songs || songs.length === 0) return null
+export function getNextSongIndex(
+  currentIndex: number,
+  totalSongs: number,
+  repeatMode: RepeatMode
+): number {
+  if (totalSongs === 0) return -1
+  if (repeatMode === 'one') return currentIndex
+  if (currentIndex < totalSongs - 1) return currentIndex + 1
+  // We're at the last song
+  if (repeatMode === 'all') return 0
+  return -1 // stop
+}
 
-  const sorted = [...songs].sort((a, b) => a.order - b.order)
-  const totalDuration = sorted.reduce((sum, s) => sum + Math.max(1, s.duration), 0)
-  if (totalDuration <= 0) return null
-
-  const startTime = new Date(station.createdAt).getTime()
-  // If the station was created in the future (clock skew), treat as 0
-  const elapsed = Math.max(0, (now - startTime) / 1000)
-  const positionInPlaylist = elapsed % totalDuration
-
-  let cumulative = 0
-  for (let i = 0; i < sorted.length; i++) {
-    const song = sorted[i]
-    const dur = Math.max(1, song.duration)
-    if (positionInPlaylist < cumulative + dur) {
-      const offset = positionInPlaylist - cumulative
-      const nextIndex = (i + 1) % sorted.length
-      return {
-        song,
-        index: i,
-        offset: Math.max(0, offset),
-        remaining: Math.max(0, dur - offset),
-        totalDuration,
-        nextSong: sorted[nextIndex],
-        serverTime: now,
-      }
-    }
-    cumulative += dur
-  }
-
-  // Fallback (shouldn't happen, but for safety)
-  const last = sorted[sorted.length - 1]
-  return {
-    song: last,
-    index: sorted.length - 1,
-    offset: 0,
-    remaining: Math.max(1, last.duration),
-    totalDuration,
-    nextSong: sorted[0],
-    serverTime: now,
-  }
+/**
+ * Returns the previous song index. Wraps around to the last song if at the
+ * first song (regardless of repeat mode — going backwards always works).
+ */
+export function getPreviousSongIndex(
+  currentIndex: number,
+  totalSongs: number
+): number {
+  if (totalSongs === 0) return -1
+  if (currentIndex > 0) return currentIndex - 1
+  return totalSongs - 1 // wrap to last song
 }
 
 /**

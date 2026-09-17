@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 /**
  * StationCard
  * Clickable card representing a single radio station. Clicking it loads
- * the station into the player.
+ * the station into the player (personal mode).
  */
 export function StationCard({ station }: { station: StationWithCount }) {
   const { activeStation, setActiveStation, isPlaying } = useRadioStore()
@@ -55,7 +55,7 @@ export function StationCard({ station }: { station: StationWithCount }) {
               className="animate-live-pulse h-1.5 w-1.5 rounded-full"
               style={{ background: accent }}
             />
-            En vivo
+            Sintonizando
           </span>
         ) : (
           <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-medium text-secondary-foreground">
@@ -91,7 +91,7 @@ export function StationCard({ station }: { station: StationWithCount }) {
               <EqualizerBars playing={isPlaying} count={4} />
             </span>
             <span className="text-xs font-medium text-foreground">
-              Reproduciendo
+              {isPlaying ? 'Reproduciendo' : 'En pausa'}
             </span>
           </div>
         ) : (
