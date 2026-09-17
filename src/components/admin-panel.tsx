@@ -786,7 +786,7 @@ function AddSongDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: { title: string; artist?: string; audioUrl: string; duration?: number; coverUrl?: string }) => void
+  onSubmit: (data: { title: string; artist?: string; audioUrl: string; duration?: number; coverUrl?: string; youtubeUrl?: string }) => void
   accent: string
   stationId: string
 }) {
@@ -795,6 +795,7 @@ function AddSongDialog({
   const [audioUrl, setAudioUrl] = useState('')
   const [duration, setDuration] = useState(180)
   const [coverUrl, setCoverUrl] = useState('')
+  const [youtubeUrl, setYoutubeUrl] = useState('')
 
   const handleSubmit = () => {
     if (!title.trim() || !audioUrl.trim()) return
@@ -804,12 +805,14 @@ function AddSongDialog({
       audioUrl: audioUrl.trim(),
       duration,
       coverUrl: coverUrl.trim() || undefined,
+      youtubeUrl: youtubeUrl.trim() || undefined,
     })
     setTitle('')
     setArtist('')
     setAudioUrl('')
     setDuration(180)
     setCoverUrl('')
+    setYoutubeUrl('')
   }
 
   return (
@@ -854,6 +857,18 @@ function AddSongDialog({
               type="url"
             />
           </div>
+          <div className="space-y-2">
+            <Label>URL de YouTube (opcional)</Label>
+            <Input
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=…"
+              type="url"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Si la añades, aparecerá un botón de YouTube en el reproductor para que los oyentes puedan ver el videoclip.
+            </p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
@@ -892,6 +907,7 @@ function EditSongDialog({
   const [artist, setArtist] = useState(song.artist)
   const [audioUrl, setAudioUrl] = useState(song.audioUrl)
   const [duration, setDuration] = useState(song.duration)
+  const [youtubeUrl, setYoutubeUrl] = useState(song.youtubeUrl || '')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -916,11 +932,23 @@ function EditSongDialog({
             onDurationChange2={setDuration}
             stationId={stationId}
           />
+          <div className="space-y-2">
+            <Label>URL de YouTube (opcional)</Label>
+            <Input
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=…"
+              type="url"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Si la añades, aparecerá un botón de YouTube en el reproductor para que los oyentes puedan ver el videoclip.
+            </p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button
-            onClick={() => onSubmit({ title, artist, audioUrl, duration })}
+            onClick={() => onSubmit({ title, artist, audioUrl, duration, youtubeUrl: youtubeUrl.trim() || null })}
             style={{ background: accent, color: '#ffffff' }}
           >
             Guardar

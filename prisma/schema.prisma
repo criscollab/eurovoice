@@ -29,6 +29,9 @@ model Song {
   audioUrl    String
   duration    Int      @default(180) // duration in seconds
   coverUrl    String?
+  // Optional YouTube URL for the music video. If set, a YouTube button appears
+  // in the player that opens the video in a new tab. Manually set via admin panel.
+  youtubeUrl  String?
   order       Int      @default(0)
   playCount   Int      @default(0) // how many times this song has been played
   stationId   String

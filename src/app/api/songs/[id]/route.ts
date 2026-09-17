@@ -22,7 +22,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const { id } = await params
     const body = await req.json()
-    const { title, artist, audioUrl, duration, coverUrl, order } = body || {}
+    const { title, artist, audioUrl, duration, coverUrl, youtubeUrl, order } = body || {}
 
     const existing = await db.song.findUnique({ where: { id } })
     if (!existing) {
@@ -40,6 +40,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         ...(typeof audioUrl === 'string' && audioUrl.trim() ? { audioUrl: audioUrl.trim() } : {}),
         ...(typeof duration === 'number' && duration > 0 ? { duration: Math.floor(duration) } : {}),
         ...(coverUrl !== undefined ? { coverUrl: coverUrl?.trim() || null } : {}),
+        ...(youtubeUrl !== undefined ? { youtubeUrl: youtubeUrl?.trim() || null } : {}),
         ...(typeof order === 'number' && Number.isFinite(order) ? { order: Math.floor(order) } : {}),
       },
     })

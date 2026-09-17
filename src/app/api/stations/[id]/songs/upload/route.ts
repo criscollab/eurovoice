@@ -122,6 +122,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     const file = formData.get('file')
     const title = formData.get('title') as string | null
     const artist = formData.get('artist') as string | null
+    const youtubeUrl = formData.get('youtubeUrl') as string | null
 
     if (!file || !(file instanceof File)) {
       return NextResponse.json(
@@ -199,6 +200,7 @@ export async function POST(req: NextRequest, { params }: Params) {
         artist: (artist?.trim() || 'Artista desconocido').slice(0, 200),
         audioUrl,
         duration,
+        youtubeUrl: typeof youtubeUrl === 'string' && youtubeUrl.trim() ? youtubeUrl.trim() : null,
         order: nextOrder,
         stationId: id,
       },

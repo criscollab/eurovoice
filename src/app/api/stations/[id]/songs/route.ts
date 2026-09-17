@@ -60,7 +60,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
 
     const body = await req.json()
-    const { title, artist, audioUrl, duration, coverUrl, order } = body || {}
+    const { title, artist, audioUrl, duration, coverUrl, youtubeUrl, order } = body || {}
 
     if (!title || typeof title !== 'string' || !title.trim()) {
       return NextResponse.json(
@@ -94,6 +94,7 @@ export async function POST(req: NextRequest, { params }: Params) {
         audioUrl: audioUrl.trim(),
         duration: typeof duration === 'number' && duration > 0 ? Math.floor(duration) : 180,
         coverUrl: typeof coverUrl === 'string' && coverUrl.trim() ? coverUrl.trim() : null,
+        youtubeUrl: typeof youtubeUrl === 'string' && youtubeUrl.trim() ? youtubeUrl.trim() : null,
         order: nextOrder,
         stationId: id,
       },

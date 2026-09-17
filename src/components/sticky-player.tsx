@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRadioStore } from '@/lib/radio-store'
 import { formatTime, getNextSongIndex, getPreviousSongIndex } from '@/lib/radio'
+import { normalizeYouTubeUrl } from '@/lib/youtube'
 import { VinylDisc } from '@/components/vinyl-disc'
 import { EqualizerBars } from '@/components/equalizer-bars'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ import {
   ChevronUp,
   ListMusic,
   Radio,
+  Youtube,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { RepeatMode } from '@/lib/radio'
@@ -409,6 +411,24 @@ export function StickyPlayer() {
                 >
                   <ListMusic className="h-4 w-4" />
                 </Button>
+
+                {/* YouTube button (only visible if the current song has a YouTube URL) */}
+                {currentSong?.youtubeUrl && (() => {
+                  const normalized = normalizeYouTubeUrl(currentSong.youtubeUrl)
+                  if (!normalized) return null
+                  return (
+                    <a
+                      href={normalized}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      aria-label="Ver videoclip en YouTube (abre en nueva pestaña)"
+                      title="Ver videoclip en YouTube (abre en nueva pestaña)"
+                    >
+                      <Youtube className="h-4 w-4" />
+                    </a>
+                  )
+                })()}
               </div>
 
               {/* Progress bar */}
