@@ -102,8 +102,14 @@ export function StickyPlayer() {
     audio.src = url
     audio.load()
 
+    // Track whether metadata has been handled to avoid double-fire
+    let metadataHandled = false
+
     // We need to seek to the offset once metadata is loaded
     const handleLoadedMetadata = () => {
+      if (metadataHandled) return
+      metadataHandled = true
+
       try {
         // Clamp offset to a safe range
         const dur = audio.duration && Number.isFinite(audio.duration) ? audio.duration : nowPlaying.song.duration
@@ -114,12 +120,41 @@ export function StickyPlayer() {
         // Some browsers throw if not yet seekable; ignore
       }
       setLoadingTrack(false)
-      // Auto-play if the user previously had it playing
+
+      // Auto-play if the user previously had it playing.
+      // We retry up to 3 times because some browsers block autoplay briefly
+      // during transitions between tracks (especially after the previous
+      // track ended naturally without a user gesture).
       if (isPlaying) {
-        audio.play().catch((e) => {
-          console.warn('Autoplay blocked:', e)
-          setIsPlaying(false)
-        })
+        const tryPlay = (attempt = 0) => {
+          audio
+            .play()
+            .then(() => {
+              // Success — make sure UI reflects this
+              setIsPlaying(true)
+            })
+            .catch((e) => {
+              console.warn(`Autoplay attempt ${attempt + 1} failed:`, e?.message || e)
+              if (attempt < 3) {
+                // Wait 300ms and retry — sometimes the browser just needs a moment
+                setTimeout(() => tryPlay(attempt + 1), 300)
+              } else {
+                // Give up and show paused state
+                setIsPlaying(false)
+              }
+            })
+        }
+        tryPlay(0)
+
+        // Safety net: after 2 seconds, if still paused but should be playing,
+        // try one more time. This catches edge cases where the play() promise
+        // resolved but the audio didn't actually start.
+        setTimeout(() => {
+          if (isPlaying && audio.paused && !audio.ended) {
+            console.warn('Audio should be playing but is paused. Retrying...')
+            audio.play().catch(() => setIsPlaying(false))
+          }
+        }, 2000)
       }
     }
 
@@ -176,17 +211,61 @@ export function StickyPlayer() {
     if (!audio) return
 
     const onEnded = () => {
-      // Force a fresh fetch of now-playing — the server will tell us the next song
-      fetchNowPlaying().then((np) => {
-        if (np) {
-          setNowPlaying(np)
-          lastSongIdRef.current = null // allow the song-change effect to re-run
+      console.log('🎵 Song ended, advancing to next song...')
+
+      // First, try to advance to the nextSong from the current nowPlaying info.
+      // This is the most reliable way — we already have the next song's data.
+      if (nowPlaying?.nextSong) {
+        const nextSong = nowPlaying.nextSong
+        console.log(`🎵 Next song: ${nextSong.title} (${nextSong.audioUrl})`)
+
+        // IMMEDIATELY swap the audio source — don't wait for state update cycle.
+        // This prevents the browser from staying paused on the old song.
+        const audio2 = audioRef.current
+        if (audio2) {
+          audio2.src = nextSong.audioUrl
+          audio2.load()
+
+          // Play as soon as metadata is loaded
+          const handlePlay = () => {
+            audio2.play().then(() => {
+              console.log(`✅ Now playing: ${nextSong.title}`)
+              setIsPlaying(true)
+            }).catch((e: any) => {
+              console.warn('Autoplay failed:', e?.message)
+              setIsPlaying(false)
+            })
+          }
+          audio2.addEventListener('loadedmetadata', handlePlay, { once: true })
         }
-      })
+
+        // Build a synthetic nowPlaying for the next song with offset 0
+        const syntheticNowPlaying = {
+          song: nextSong,
+          index: nowPlaying.index + 1,
+          offset: 0,
+          remaining: nextSong.duration,
+          totalDuration: nowPlaying.totalDuration,
+          nextSong: undefined,
+          serverTime: Date.now(),
+        }
+        setNowPlaying(syntheticNowPlaying)
+        lastSongIdRef.current = nextSong.id
+        setIsPlaying(true)
+      } else {
+        // Fallback: fetch from server
+        fetchNowPlaying().then((np) => {
+          if (np) {
+            setNowPlaying(np)
+            lastSongIdRef.current = null
+            setIsPlaying(true)
+          }
+        })
+      }
     }
     audio.addEventListener('ended', onEnded)
     return () => audio.removeEventListener('ended', onEnded)
-  }, [nowPlaying?.song.id, activeStation])
+  }, [nowPlaying?.song.id, nowPlaying?.nextSong, activeStation])
 
   if (!activeStation) return null
 
