@@ -4,7 +4,8 @@ import { getAdminSession } from '@/lib/auth'
 
 /**
  * GET /api/stations
- * Public — anyone can list stations.
+ * Public — anyone can list stations. Ordered by `order` field, then by
+ * `createdAt` as a fallback for stations that haven't been assigned an order.
  */
 export async function GET() {
   try {
@@ -12,7 +13,7 @@ export async function GET() {
       include: {
         _count: { select: { songs: true } },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
     })
     return NextResponse.json({ stations })
   } catch (error) {
@@ -48,6 +49,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Determine the next order value (append at the end of the list)
+    const maxOrderAgg = await db.station.aggregate({ _max: { order: true } })
+    const nextOrder = (maxOrderAgg._max.order ?? -1) + 1
+
     const station = await db.station.create({
       data: {
         name: name.trim(),
@@ -55,6 +60,7 @@ export async function POST(req: NextRequest) {
         language: language?.trim() || 'Español',
         color: color?.trim() || '#ec4899',
         coverUrl: coverUrl?.trim() || null,
+        order: nextOrder,
       },
     })
 

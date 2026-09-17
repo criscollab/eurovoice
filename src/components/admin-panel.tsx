@@ -241,6 +241,30 @@ export function AdminPanel() {
     }
   }
 
+  // === Station reordering (move station up/down) ===
+  const handleMoveStation = async (index: number, direction: -1 | 1) => {
+    const stations = [...loadedStations].sort((a, b) => a.order - b.order)
+    const newIndex = index + direction
+    if (newIndex < 0 || newIndex >= stations.length) return
+    // Swap
+    ;[stations[index], stations[newIndex]] = [stations[newIndex], stations[index]]
+    // Reassign orders
+    stations.forEach((s, i) => (s.order = i))
+    // Optimistic update
+    setLoadedStations([...stations])
+    try {
+      await fetch('/api/stations/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderedStationIds: stations.map((s) => s.id) }),
+      })
+      await refreshStations()
+      toast({ title: 'Orden de emisoras actualizado' })
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo guardar el orden.', variant: 'destructive' })
+    }
+  }
+
   return (
     <Sheet open={adminOpen} onOpenChange={setAdminOpen}>
       <SheetContent
@@ -279,16 +303,27 @@ export function AdminPanel() {
                   <CreateStationDialog onCreate={handleCreateStation} />
                 </div>
 
+                {loadedStations.length > 1 && (
+                  <p className="text-[11px] text-muted-foreground bg-secondary/40 rounded-md px-3 py-1.5">
+                    💡 Usa los botones <strong>▲</strong> y <strong>▼</strong> junto a cada emisora para cambiar el orden en que aparecen en la página principal.
+                  </p>
+                )}
+
                 {loadedStations.length === 0 ? (
                   <p className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
                     Cargando emisoras…
                   </p>
                 ) : (
                   <div className="space-y-4">
-                    {loadedStations.map((station) => (
+                    {[...loadedStations]
+                      .sort((a, b) => a.order - b.order)
+                      .map((station, sortedIndex) => (
                       <StationAdminCard
                         key={station.id}
                         station={station}
+                        stationIndex={sortedIndex}
+                        totalStations={loadedStations.length}
+                        onMoveStation={(dir) => handleMoveStation(sortedIndex, dir)}
                         onEdit={() => setEditingStation(station)}
                         onDelete={() => handleDeleteStation(station.id, station.name)}
                         onAddSong={(data) => handleAddSong(station.id, data)}
@@ -319,6 +354,9 @@ export function AdminPanel() {
  */
 function StationAdminCard({
   station,
+  stationIndex,
+  totalStations,
+  onMoveStation,
   onEdit,
   onDelete,
   onAddSong,
@@ -328,6 +366,9 @@ function StationAdminCard({
   onUpdateStation,
 }: {
   station: StationWithSongs
+  stationIndex: number
+  totalStations: number
+  onMoveStation: (dir: -1 | 1) => void
   onEdit: () => void
   onDelete: () => void
   onAddSong: (data: { title: string; artist?: string; audioUrl: string; duration?: number; coverUrl?: string }) => void
@@ -356,6 +397,41 @@ function StationAdminCard({
           background: `linear-gradient(135deg, color-mix(in oklch, ${accent} 18%, transparent) 0%, transparent 100%)`,
         }}
       >
+        {/* Position badge + reorder controls */}
+        <div className="flex shrink-0 flex-col items-center gap-0.5">
+          <span
+            className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold tabular-nums text-white"
+            style={{ background: accent }}
+            title={`Posición ${stationIndex + 1}`}
+          >
+            {stationIndex + 1}
+          </span>
+          <div className="flex flex-col">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5"
+              onClick={() => onMoveStation(-1)}
+              disabled={stationIndex === 0}
+              aria-label="Subir emisora"
+              title="Mover arriba"
+            >
+              <ArrowUp className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5"
+              onClick={() => onMoveStation(1)}
+              disabled={stationIndex === totalStations - 1}
+              aria-label="Bajar emisora"
+              title="Mover abajo"
+            >
+              <ArrowDown className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+
         <div
           className="h-10 w-10 shrink-0 rounded-full"
           style={{
