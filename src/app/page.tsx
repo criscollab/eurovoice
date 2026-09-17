@@ -6,6 +6,7 @@ import { StationCard } from '@/components/station-card'
 import { StickyPlayer } from '@/components/sticky-player'
 import { AdminPanel } from '@/components/admin-panel'
 import { UserMenu } from '@/components/user-menu'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { Radio, Music2, Headphones, Waves, Globe2 } from 'lucide-react'
 
@@ -58,7 +59,10 @@ export default function Home() {
             </div>
           </div>
 
-          <UserMenu />
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <UserMenu />
+          </div>
         </div>
       </header>
 
