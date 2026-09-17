@@ -31,12 +31,6 @@ model Song {
   coverUrl    String?
   order       Int      @default(0)
   playCount   Int      @default(0) // how many times this song has been played
-  // Lyrics fields (optional). Used for the optional lyrics panel in the player.
-  // - lyricsPlain: plain text lyrics (no timestamps) — fallback when no LRC
-  // - lyricsLrc: LRC format with [mm:ss.xx] timestamps — for synced highlighting
-  // Both can be filled manually in the admin panel or auto-fetched from LRCLIB API.
-  lyricsPlain String?
-  lyricsLrc   String?
   stationId   String
   station     Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
