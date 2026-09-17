@@ -38,7 +38,7 @@ import {
 } from 'lucide-react'
 import { formatTime } from '@/lib/radio'
 import { cn } from '@/lib/utils'
-import { UrlAudioTester } from '@/components/url-audio-tester'
+import { SongUploader } from '@/components/song-uploader'
 import { AdminStats } from '@/components/admin-stats'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { BarChart3 } from 'lucide-react'
@@ -579,6 +579,7 @@ function StationAdminCard({
             setShowAddSong(false)
           }}
           accent={accent}
+          stationId={station.id}
         />
       )}
 
@@ -593,6 +594,7 @@ function StationAdminCard({
             setEditingSongId(null)
           }}
           accent={accent}
+          stationId={station.id}
         />
       )}
 
@@ -780,11 +782,13 @@ function AddSongDialog({
   onOpenChange,
   onSubmit,
   accent,
+  stationId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: { title: string; artist?: string; audioUrl: string; duration?: number; coverUrl?: string }) => void
   accent: string
+  stationId: string
 }) {
   const [title, setTitle] = useState('')
   const [artist, setArtist] = useState('')
@@ -814,7 +818,7 @@ function AddSongDialog({
         <DialogHeader>
           <DialogTitle>Agregar canción</DialogTitle>
           <DialogDescription>
-            La canción se añadirá al final de la cola de reproducción.
+            Sube un archivo MP3 o pega una URL externa. La canción se añadirá al final de la cola.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
@@ -834,22 +838,13 @@ function AddSongDialog({
               placeholder="Nombre del artista"
             />
           </div>
-          <UrlAudioTester url={audioUrl} onUrlChange={setAudioUrl} />
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Duración (segundos)</Label>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {formatTime(duration)} min
-              </span>
-            </div>
-            <Slider
-              value={[duration]}
-              min={10}
-              max={600}
-              step={5}
-              onValueChange={(v) => setDuration(v[0])}
-            />
-          </div>
+          <SongUploader
+            url={audioUrl}
+            duration={duration}
+            onUrlChange={setAudioUrl}
+            onDurationChange2={setDuration}
+            stationId={stationId}
+          />
           <div className="space-y-2">
             <Label>URL de la portada (opcional)</Label>
             <Input
@@ -865,7 +860,7 @@ function AddSongDialog({
           <Button
             onClick={handleSubmit}
             disabled={!title.trim() || !audioUrl.trim()}
-            style={{ background: accent, color: '#0a0a0a' }}
+            style={{ background: accent, color: '#ffffff' }}
           >
             Agregar
           </Button>
@@ -884,12 +879,14 @@ function EditSongDialog({
   onOpenChange,
   onSubmit,
   accent,
+  stationId,
 }: {
   song: Song
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: Partial<Song>) => void
   accent: string
+  stationId: string
 }) {
   const [title, setTitle] = useState(song.title)
   const [artist, setArtist] = useState(song.artist)
@@ -901,7 +898,7 @@ function EditSongDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar canción</DialogTitle>
-          <DialogDescription>Modifica los datos de "{song.title}".</DialogDescription>
+          <DialogDescription>Modifica los datos de "{song.title}". Puedes reemplazar el audio subiendo uno nuevo.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
@@ -912,28 +909,19 @@ function EditSongDialog({
             <Label>Artista</Label>
             <Input value={artist} onChange={(e) => setArtist(e.target.value)} />
           </div>
-          <UrlAudioTester url={audioUrl} onUrlChange={setAudioUrl} />
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Duración (segundos)</Label>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {formatTime(duration)} min
-              </span>
-            </div>
-            <Slider
-              value={[duration]}
-              min={10}
-              max={600}
-              step={5}
-              onValueChange={(v) => setDuration(v[0])}
-            />
-          </div>
+          <SongUploader
+            url={audioUrl}
+            duration={duration}
+            onUrlChange={setAudioUrl}
+            onDurationChange2={setDuration}
+            stationId={stationId}
+          />
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button
             onClick={() => onSubmit({ title, artist, audioUrl, duration })}
-            style={{ background: accent, color: '#0a0a0a' }}
+            style={{ background: accent, color: '#ffffff' }}
           >
             Guardar
           </Button>
