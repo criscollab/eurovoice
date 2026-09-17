@@ -1,17 +1,19 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRadioStore } from '@/lib/radio-store'
 import { StationCard } from '@/components/station-card'
 import { StickyPlayer } from '@/components/sticky-player'
 import { AdminPanel } from '@/components/admin-panel'
 import { UserMenu } from '@/components/user-menu'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { AboutDialog } from '@/components/about-dialog'
 import { Button } from '@/components/ui/button'
-import { Radio, Music2, Headphones, Waves, Globe2 } from 'lucide-react'
+import { Radio, Music2, Headphones, Waves, Globe2, Info } from 'lucide-react'
 
 export default function Home() {
   const { stations, setStations } = useRadioStore()
+  const [aboutOpen, setAboutOpen] = useState(false)
 
   // Load stations on mount
   useEffect(() => {
@@ -142,19 +144,31 @@ export default function Home() {
 
       {/* === Footer === */}
       <footer className="mt-auto border-t border-border/60 bg-card/40 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground md:flex-row md:px-6">
-          <p>
-            <span className="font-semibold text-foreground">Euro Voice</span>
-            {' — '}
-            Radio online multi-emisora 24/7
-          </p>
-          <p>Hecho con Next.js · Prisma · Tailwind CSS</p>
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-xs text-muted-foreground md:flex-row md:px-6">
+          <div className="flex flex-col items-center gap-1 md:flex-row md:gap-3">
+            <p>
+              <span className="font-semibold text-foreground">Euro Voice</span>
+              {' — '}
+              Radio online multi-emisora 24/7
+            </p>
+            <span className="hidden md:inline text-border">·</span>
+            <p>Hecho con Next.js · Prisma · Tailwind CSS</p>
+          </div>
+          <button
+            onClick={() => setAboutOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            aria-label="Abrir página Acerca de"
+          >
+            <Info className="h-3.5 w-3.5" />
+            Acerca de
+          </button>
         </div>
       </footer>
 
       {/* === Floating components === */}
       <StickyPlayer />
       <AdminPanel />
+      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
     </main>
   )
 }
