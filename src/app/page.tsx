@@ -39,23 +39,23 @@ export default function Home() {
     <main className="flex min-h-screen flex-col">
       {/* === Header === */}
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2 md:gap-4 md:px-6 md:py-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {/* Logo */}
-            <div className="relative flex h-10 w-10 items-center justify-center">
+            <div className="relative flex h-8 w-8 items-center justify-center md:h-10 md:w-10">
               <div
-                className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 opacity-30 blur-sm"
+                className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 opacity-30 blur-sm md:rounded-xl"
                 aria-hidden="true"
               />
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 shadow-md">
-                <Radio className="h-5 w-5 text-white" />
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 shadow-md md:h-10 md:w-10 md:rounded-xl">
+                <Radio className="h-4 w-4 text-white md:h-5 md:w-5" />
               </div>
             </div>
             <div>
-              <h1 className="text-lg font-bold leading-tight text-foreground">
+              <h1 className="text-base font-bold leading-tight text-foreground md:text-lg">
                 Euro <span className="text-primary">Voice</span>
               </h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <p className="hidden md:block text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                 Radio · Multi-emisora · 24/7
               </p>
             </div>
@@ -69,33 +69,31 @@ export default function Home() {
       </header>
 
       {/* === Hero === */}
-      <section className="mx-auto w-full max-w-7xl px-4 py-10 md:px-6 md:py-16">
-        <div className="flex flex-col items-start gap-4">
+      <section className="mx-auto w-full max-w-7xl px-3 py-6 md:px-6 md:py-16">
+        <div className="flex flex-col items-start gap-3 md:gap-4">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
             <span className="animate-live-pulse h-1.5 w-1.5 rounded-full bg-primary" />
             Música en vivo 24/7
           </span>
-          <h2 className="text-balance text-4xl font-bold leading-tight tracking-tight md:text-6xl">
+          <h2 className="text-balance text-3xl font-bold leading-tight tracking-tight md:text-6xl">
             Sintoniza y{' '}
             <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 bg-clip-text text-transparent">
               disfruta
             </span>{' '}
             tu radio online
           </h2>
-          <p className="max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
+          <p className="max-w-2xl text-balance text-sm text-muted-foreground md:text-lg">
             Varias emisoras en distintos idiomas transmitiendo música en vivo,
-            las 24 horas. Escucha cuando quieras, donde quieras — elige una
-            emisora, salta entre canciones, repite tus favoritas y arma tu
-            propia experiencia.
+            las 24 horas. Escucha cuando quieras, donde quieras.
           </p>
-          <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-3 md:gap-4 pt-1 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <Music2 className="h-3.5 w-3.5 text-primary" />
-              {stations.length} emisoras disponibles
+              {stations.length} emisoras
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Headphones className="h-3.5 w-3.5 text-primary" />
-              {totalSongs} canciones en programación
+              {totalSongs} canciones
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Globe2 className="h-3.5 w-3.5 text-primary" />
@@ -106,28 +104,43 @@ export default function Home() {
       </section>
 
       {/* === Stations grid === */}
-      <section className="mx-auto w-full max-w-7xl flex-1 px-4 pb-40 md:px-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Emisoras disponibles
+      <section className="mx-auto w-full max-w-7xl flex-1 px-3 pb-40 md:px-6">
+        <div className="mb-3 flex items-center justify-between md:mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground md:text-sm">
+            {searchQuery ? `Resultados para "${searchQuery}"` : 'Emisoras disponibles'}
           </h3>
-          <span className="text-xs text-muted-foreground">
-            Toca una para sintonizar
+          <span className="text-[11px] text-muted-foreground md:text-xs">
+            {searchQuery
+              ? `${filteredStations.length} ${filteredStations.length === 1 ? 'emisora' : 'emisoras'} con coincidencias`
+              : 'Toca una para sintonizar'
+            }
           </span>
         </div>
 
-        {stations.length === 0 ? (
+        {searchQuery && filteredStations.length === 0 ? (
+          <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border/60 p-12 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary">
+              <SearchX className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">No se encontraron emisoras</h3>
+              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                No hay canciones que coincidan con &quot;{searchQuery}&quot;. Prueba con otro término.
+              </p>
+            </div>
+          </div>
+        ) : stations.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {stations.map((station) => (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+            {filteredStations.map((station) => (
               <StationCard key={station.id} station={station} />
             ))}
           </div>
         )}
 
-        {/* Educational note about how it works */}
-        <div className="mt-12 rounded-xl border border-border/60 bg-card/60 p-5 text-sm text-muted-foreground">
+        {/* Educational note about how it works (hidden on mobile) */}
+        <div className="mt-12 hidden rounded-xl border border-border/60 bg-card/60 p-5 text-sm text-muted-foreground md:block">
           <h4 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
             <Waves className="h-4 w-4 text-primary" />
             ¿Cómo funciona?
@@ -144,15 +157,13 @@ export default function Home() {
 
       {/* === Footer === */}
       <footer className="mt-auto border-t border-border/60 bg-card/40 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-xs text-muted-foreground md:flex-row md:px-6">
-          <div className="flex flex-col items-center gap-1 md:flex-row md:gap-3">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-3 py-3 text-xs text-muted-foreground md:flex-row md:gap-3 md:px-6 md:py-5">
+          <div className="flex items-center gap-2">
             <p>
               <span className="font-semibold text-foreground">Euro Voice</span>
               {' — '}
-              Radio online multi-emisora 24/7
+              Radio 24/7
             </p>
-            <span className="hidden md:inline text-border">·</span>
-            <p>Hecho con Next.js · Prisma · Tailwind CSS</p>
           </div>
           <button
             onClick={() => setAboutOpen(true)}

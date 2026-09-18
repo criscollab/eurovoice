@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useRadioStore, type StationWithCount } from '@/lib/radio-store'
-import { VinylDisc } from '@/components/vinyl-disc'
+import { AlbumArt } from '@/components/album-art'
 import { EqualizerBars } from '@/components/equalizer-bars'
 import { Music2, Languages, Radio } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -10,17 +11,38 @@ import { cn } from '@/lib/utils'
  * StationCard
  * Clickable card representing a single radio station. Clicking it loads
  * the station into the player (personal mode).
+ *
+ * If the station has songs with covers, shows the cover of the most played
+ * song. Otherwise, falls back to a plain AlbumArt (vinyl disc).
  */
 export function StationCard({ station }: { station: StationWithCount }) {
   const { activeStation, setActiveStation, isPlaying } = useRadioStore()
   const isActive = activeStation?.id === station.id
   const accent = station.color
+  const [stationCover, setStationCover] = useState<string | null>(null)
+
+  // Fetch the station's cover (from the most played song with a cover)
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/api/stations/${station.id}/cover`, { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return
+        setStationCover(data.coverUrl || null)
+      })
+      .catch(() => {
+        // Silently fail — fallback to plain vinyl
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [station.id])
 
   return (
     <button
       onClick={() => setActiveStation(station)}
       className={cn(
-        'group relative w-full overflow-hidden rounded-2xl border bg-card p-5 text-left shadow-sm transition-all',
+        'group relative w-full overflow-hidden rounded-2xl border bg-card p-4 text-left shadow-sm transition-all md:p-5',
         'hover:-translate-y-1 hover:shadow-lg',
         isActive ? 'border-transparent' : 'border-border hover:border-primary/40'
       )}
@@ -36,12 +58,21 @@ export function StationCard({ station }: { station: StationWithCount }) {
         style={{ background: accent }}
       />
 
-      {/* Top row: vinyl + live badge */}
+      {/* Top row: album art + live badge */}
       <div className="relative flex items-start justify-between">
-        <VinylDisc
+        <AlbumArt
+          coverUrl={stationCover}
+          spinning={isActive && isPlaying}
+          color={accent}
+          size={56}
+          className="md:hidden"
+        />
+        <AlbumArt
+          coverUrl={stationCover}
           spinning={isActive && isPlaying}
           color={accent}
           size={72}
+          className="hidden md:block"
         />
         {isActive ? (
           <span
@@ -65,8 +96,8 @@ export function StationCard({ station }: { station: StationWithCount }) {
       </div>
 
       {/* Title + language */}
-      <div className="mt-4">
-        <h3 className="text-lg font-bold text-foreground">{station.name}</h3>
+      <div className="mt-3 md:mt-4">
+        <h3 className="text-base font-bold text-foreground md:text-lg">{station.name}</h3>
         <div
           className="mt-1 inline-flex items-center gap-1.5 text-xs"
           style={{ color: accent }}
@@ -78,13 +109,13 @@ export function StationCard({ station }: { station: StationWithCount }) {
 
       {/* Description */}
       {station.description && (
-        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+        <p className="mt-2 line-clamp-2 text-xs text-muted-foreground md:text-sm">
           {station.description}
         </p>
       )}
 
       {/* Footer: now playing or play CTA */}
-      <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3">
+      <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3 md:mt-4">
         {isActive ? (
           <div className="flex items-center gap-2">
             <span style={{ color: accent }}>
