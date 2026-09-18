@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRadioStore } from '@/lib/radio-store'
 import { StationCard } from '@/components/station-card'
 import { StickyPlayer } from '@/components/sticky-player'
@@ -8,12 +8,18 @@ import { AdminPanel } from '@/components/admin-panel'
 import { UserMenu } from '@/components/user-menu'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AboutDialog } from '@/components/about-dialog'
+import { SearchBar } from '@/components/search-bar'
+import { SupportDialog } from '@/components/support-dialog'
+import { StillListeningPrompt } from '@/components/still-listening-prompt'
 import { Button } from '@/components/ui/button'
-import { Radio, Music2, Headphones, Waves, Globe2, Info } from 'lucide-react'
+import { Radio, Music2, Headphones, Waves, Globe2, Info, Heart, SearchX } from 'lucide-react'
 
 export default function Home() {
   const { stations, setStations } = useRadioStore()
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(false)
+  const [matchingStationIds, setMatchingStationIds] = useState<string[] | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Load stations on mount
   useEffect(() => {
@@ -31,6 +37,22 @@ export default function Home() {
       cancelled = true
     }
   }, [setStations])
+
+  const handleSearchResults = useCallback(
+    (stationIds: string[] | null, query: string) => {
+      setMatchingStationIds(stationIds)
+      setSearchQuery(query)
+    },
+    []
+  )
+
+  // Filter stations based on search results.
+  // matchingStationIds === null → no active search → show all
+  // matchingStationIds === []   → search active with no matches → show empty state
+  const filteredStations =
+    matchingStationIds === null
+      ? stations
+      : stations.filter((s) => matchingStationIds.includes(s.id))
 
   const totalSongs = stations.reduce((sum, s) => sum + s._count.songs, 0)
   const totalLanguages = new Set(stations.map((s) => s.language)).size
@@ -62,6 +84,17 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-1">
+            {/* Support button — icon only on mobile, full label on sm+ */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSupportOpen(true)}
+              className="gap-1.5 rounded-full text-pink-500 hover:bg-pink-500/10 hover:text-pink-500"
+              aria-label="Apoya Euro Voice"
+            >
+              <Heart className="h-4 w-4 fill-current" />
+              <span className="hidden sm:inline">Apoya</span>
+            </Button>
             <ThemeToggle />
             <UserMenu />
           </div>
@@ -103,11 +136,18 @@ export default function Home() {
         </div>
       </section>
 
+      {/* === Search bar === */}
+      <section className="mx-auto w-full max-w-3xl px-3 pb-2 md:px-6 md:pb-4">
+        <SearchBar onResultsChange={handleSearchResults} />
+      </section>
+
       {/* === Stations grid === */}
       <section className="mx-auto w-full max-w-7xl flex-1 px-3 pb-40 md:px-6">
         <div className="mb-3 flex items-center justify-between md:mb-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground md:text-sm">
-            {searchQuery ? `Resultados para "${searchQuery}"` : 'Emisoras disponibles'}
+            {searchQuery
+              ? `Resultados para "${searchQuery}"`
+              : 'Emisoras disponibles'}
           </h3>
           <span className="text-[11px] text-muted-foreground md:text-xs">
             {searchQuery
@@ -180,6 +220,8 @@ export default function Home() {
       <StickyPlayer />
       <AdminPanel />
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+      <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
+      <StillListeningPrompt onSupportClick={() => setSupportOpen(true)} />
     </main>
   )
 }

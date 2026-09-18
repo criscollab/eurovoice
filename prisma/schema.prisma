@@ -34,13 +34,41 @@ model Song {
   youtubeUrl  String?
   order       Int      @default(0)
   playCount   Int      @default(0) // how many times this song has been played
+  // Reaction counts — denormalized for fast reads. SongReaction rows are the
+  // source of truth; these counters are kept in sync by the react endpoint.
+  likes       Int      @default(0)
+  hearts      Int      @default(0)
+  dislikes    Int      @default(0)
   stationId   String
   station     Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  reactions   SongReaction[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([stationId, order])
   @@index([playCount]) // for top-songs query
+  @@index([likes])
+  @@index([hearts])
+  @@index([dislikes])
+}
+
+/**
+ * SongReaction
+ * Stores a single reaction (like | heart | dislike) from one anonymous session
+ * to one song. The (sessionId, songId) pair is unique: each session can have
+ * at most one reaction per song. Changing the reaction just updates the row.
+ */
+model SongReaction {
+  id         String   @id @default(cuid())
+  sessionId  String
+  songId     String
+  reaction   String   // 'like' | 'heart' | 'dislike'
+  song       Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([sessionId, songId])
+  @@index([songId, reaction])
 }
 
 /**

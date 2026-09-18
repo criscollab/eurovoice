@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRadioStore } from '@/lib/radio-store'
 import { formatTime, getNextSongIndex, getPreviousSongIndex } from '@/lib/radio'
 import { normalizeYouTubeUrl } from '@/lib/youtube'
-import { VinylDisc } from '@/components/vinyl-disc'
+import { AlbumArt } from '@/components/album-art'
+import { ReactionButtons } from '@/components/reaction-buttons'
 import { EqualizerBars } from '@/components/equalizer-bars'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
@@ -284,13 +285,15 @@ export function StickyPlayer() {
           <div className="flex items-center gap-3 md:gap-5">
             {/* Vinyl + cover */}
             <div className="flex shrink-0 items-center gap-3">
-              <VinylDisc
+              <AlbumArt
+                coverUrl={currentSong?.coverUrl ?? null}
                 spinning={isPlaying && !loadingTrack}
                 color={accent}
                 size={56}
                 className="md:hidden"
               />
-              <VinylDisc
+              <AlbumArt
+                coverUrl={currentSong?.coverUrl ?? null}
                 spinning={isPlaying && !loadingTrack}
                 color={accent}
                 size={72}
@@ -323,6 +326,10 @@ export function StickyPlayer() {
                     <p className="truncate text-xs text-muted-foreground">
                       {currentSong.artist}
                     </p>
+                    {/* Reaction buttons (desktop only — mobile shows them below the progress bar) */}
+                    <div className="mt-1 hidden md:block">
+                      <ReactionButtons songId={currentSong.id} accent={accent} />
+                    </div>
                   </>
                 ) : (
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -509,6 +516,13 @@ export function StickyPlayer() {
               {formatTime(totalDuration)}
             </span>
           </div>
+
+          {/* Reaction buttons (mobile only — desktop shows them next to the song info) */}
+          {currentSong && (
+            <div className="md:hidden">
+              <ReactionButtons songId={currentSong.id} accent={accent} />
+            </div>
+          )}
 
           {error && (
             <p className="text-xs text-destructive">{error}</p>
