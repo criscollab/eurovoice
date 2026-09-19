@@ -1,54 +1,57 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 
-# dependencies
-node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Next.js build
+.next/
+out/
 
-# testing
-/coverage
+# Production
+build/
 
-# next.js
-/.next/
-/out/
+# Environment variables (¡NUNCA subir al repo público!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# production
-/build
+# Database (se creará en el hosting)
+db/*.db
+db/*.db-journal
 
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Logs
+*.log
+dev.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# vercel
-.vercel
+# Coverage
+coverage/
+*.lcov
 
+# Sandbox/scripts temporales
+.zscripts/
+scripts/test-*.ts
+/tmp/
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-local-*
-.claude
-.z-ai-config
-*.log
-dev.log
-dev.out.log
-test
-prompt
+# OS
+.DS_Store
+Thumbs.db
 
-server.log
-# Skills directory
-/skills/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Download folder (archivos generados)
+download/*.zip
