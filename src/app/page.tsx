@@ -11,6 +11,7 @@ import { AboutDialog } from '@/components/about-dialog'
 import { SearchBar } from '@/components/search-bar'
 import { SupportDialog } from '@/components/support-dialog'
 import { StillListeningPrompt } from '@/components/still-listening-prompt'
+import { LanguageSelector } from '@/components/language-selector'
 import { Button } from '@/components/ui/button'
 import { Radio, Music2, Headphones, Waves, Globe2, Info, Heart, SearchX } from 'lucide-react'
 
@@ -95,6 +96,7 @@ export default function Home() {
               <Heart className="h-4 w-4 fill-current" />
               <span className="hidden sm:inline">Apoya</span>
             </Button>
+            <LanguageSelector />
             <ThemeToggle />
             <UserMenu />
           </div>
