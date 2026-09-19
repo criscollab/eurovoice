@@ -1,5 +1,14 @@
 [phases.setup]
-nixPkgs = ["nodejs_22"]
+nixPkgs = ["nodejs_22", "bun"]
 
 [variables]
 NODE_VERSION = "22"
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["npx prisma generate", "npx prisma db push --accept-data-loss", "npm run build"]
+
+[start]
+cmd = "npm run dev"
