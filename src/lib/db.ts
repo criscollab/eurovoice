@@ -11,7 +11,7 @@ import { PrismaClient } from '@prisma/client'
  * created from. When the version mismatches (i.e. Prisma was regenerated),
  * we discard the cached instance and create a fresh one.
  */
-const SCHEMA_VERSION = '2025-01-restoration-v1' // bump this after every `prisma generate`
+const SCHEMA_VERSION = '2026-railway-prod-v1' // bump this after every `prisma generate`
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -34,10 +34,10 @@ if (
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: ['query'],
+    log: process.env.NODE_ENV === 'production' ? ['error'] : ['query'],
   })
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = db
-  globalForPrisma.__prismaSchemaVersion = SCHEMA_VERSION
-}
+// Always cache the client to avoid creating new PrismaClient instances on
+// every hot reload / serverless invocation.
+globalForPrisma.prisma = db
+globalForPrisma.__prismaSchemaVersion = SCHEMA_VERSION
