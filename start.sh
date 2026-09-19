@@ -4,26 +4,34 @@ echo "=========================================="
 echo "=== Railway Start Debug ==="
 echo "NODE_ENV: $NODE_ENV"
 echo "PORT: $PORT"
-echo "DATABASE_URL: $DATABASE_URL"
+echo "DATABASE_URL (before fix): $DATABASE_URL"
 echo "PWD: $(pwd)"
-echo "Files in /app:"
-ls -la /app 2>&1 | head -20
 echo "=========================================="
 
 # Ensure database directory exists (for SQLite)
 mkdir -p /app/db
 
-# If DATABASE_URL is not set, default to a Railway-friendly path
-if [ -z "$DATABASE_URL" ]; then
-  export DATABASE_URL="file:/app/db/custom.db"
-  echo "Set DATABASE_URL to: $DATABASE_URL"
-fi
+# Force an absolute path for DATABASE_URL — relative paths break in Next.js
+# because it can resolve them from different working directories.
+export DATABASE_URL="file:/app/db/custom.db"
+echo "DATABASE_URL (after fix): $DATABASE_URL"
+
+# Run prisma db push to create the schema in the fresh database file
+# (Railway containers are ephemeral — the DB file doesn't persist between deploys)
+echo "=== Running prisma db push to initialize database ==="
+cd /app
+npx prisma db push --accept-data-loss 2>&1 | tail -20
+echo "=========================================="
 
 # If PORT is not set, default to 3000
 if [ -z "$PORT" ]; then
   export PORT=3000
   echo "Set PORT to: $PORT"
 fi
+
+echo "=== Files in /app/db ==="
+ls -la /app/db 2>&1
+echo "=========================================="
 
 echo "=== Starting Next.js ==="
 echo "Command: npx next start -H 0.0.0.0 -p $PORT"
