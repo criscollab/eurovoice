@@ -222,7 +222,17 @@ export function StickyPlayer() {
     }
   }, [containerRef])
 
-  if (!activeStation) return null
+  if (!activeStation) {
+    // Even when no station is active, we still need to render the YouTube
+    // container so the hook can initialize the player. Otherwise, the
+    // containerRef will be null when the hook's useEffect runs, and the
+    // YouTube player will never be created.
+    return (
+      <div className="sr-only" aria-hidden="true">
+        <div ref={containerRef} />
+      </div>
+    )
+  }
 
   const accent = activeStation.color
   const totalDuration = duration || currentSong?.duration || 1

@@ -86,11 +86,27 @@ export function useYouTubePlayer({
   // Initialize player once API is loaded
   useEffect(() => {
     let cancelled = false
+    console.log('[YouTube] Initializing player, loading API...')
     loadYouTubeAPI().then(() => {
-      if (cancelled || !containerRef.current || !window.YT?.Player) return
+      if (cancelled) {
+        console.log('[YouTube] Cancelled before API loaded')
+        return
+      }
+      if (!containerRef.current) {
+        console.error('[YouTube] containerRef.current is null — cannot create player')
+        return
+      }
+      if (!window.YT?.Player) {
+        console.error('[YouTube] YT.Player not available after API load')
+        return
+      }
       // Already initialized
-      if (playerRef.current) return
+      if (playerRef.current) {
+        console.log('[YouTube] Player already exists, skipping init')
+        return
+      }
 
+      console.log('[YouTube] Creating player with videoId:', videoId)
       playerRef.current = new window.YT.Player(containerRef.current, {
         height: '100%',
         width: '100%',
@@ -105,6 +121,7 @@ export function useYouTubePlayer({
         events: {
           onReady: () => {
             if (cancelled) return
+            console.log('[YouTube] Player ready!')
             setIsReady(true)
             try {
               playerRef.current.setVolume(volume * 100)
@@ -112,10 +129,14 @@ export function useYouTubePlayer({
             onReadyRef.current?.()
           },
           onStateChange: (event: any) => {
+            console.log('[YouTube] State change:', event.data)
             // YT.PlayerState.ENDED = 0
             if (event.data === 0) {
               onEndedRef.current?.()
             }
+          },
+          onError: (event: any) => {
+            console.error('[YouTube] Player error:', event.data)
           },
         },
       })
