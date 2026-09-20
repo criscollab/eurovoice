@@ -1,5 +1,5 @@
 #!/bin/sh
-# Railway start script — v6 with explicit -H flag
+# Railway start script — v8 using standalone server
 echo "=========================================="
 echo "=== Railway Start Debug ==="
 echo "NODE_ENV: ${NODE_ENV:-(empty)}"
@@ -24,21 +24,33 @@ cd /app
 npx prisma db push --accept-data-loss 2>&1 | tail -10
 echo "=========================================="
 
-# If PORT is not set, default to 3000
+# Use the PORT that Railway provides, default to 3000 if not set
 if [ -z "$PORT" ]; then
   export PORT=3000
+  echo "PORT was not set, using default: $PORT"
 fi
 
-# Next.js 16: -H is supported (confirmed via --help)
-# Default is 0.0.0.0 but we pass it explicitly to be safe
-echo "=== Files in /app/db ==="
-ls -la /app/db 2>&1
+echo "=== Files in /app ==="
+ls -la /app 2>&1 | head -30
 echo "=========================================="
-echo "=== Starting Next.js ==="
-echo "PORT=$PORT NODE_ENV=$NODE_ENV"
-echo "Using: exec ./node_modules/.bin/next start -H 0.0.0.0 -p $PORT"
+echo "=== Files in /app/.next/standalone ==="
+ls -la /app/.next/standalone 2>&1 | head -30
+echo "=========================================="
+echo "=== Starting Next.js (standalone) ==="
+echo "PORT=$PORT NODE_ENV=$NODE_ENV HOSTNAME=0.0.0.0"
+echo "Using: exec node .next/standalone/server.js"
 echo "=========================================="
 
-# Use exec to make Next.js PID 1
-# Use -H 0.0.0.0 explicitly (verified working in Next.js 16.3.5)
-exec ./node_modules/.bin/next start -H 0.0.0.0 -p "$PORT"
+# Copy static assets to standalone dir (Next.js standalone doesn't include them by default)
+if [ -d /app/public ]; then
+  cp -r /app/public /app/.next/standalone/public 2>/dev/null || true
+fi
+if [ -d /app/.next/static ]; then
+  mkdir -p /app/.next/standalone/.next
+  cp -r /app/.next/static /app/.next/standalone/.next/static 2>/dev/null || true
+fi
+
+# Use exec with the standalone server
+# Set HOSTNAME=0.0.0.0 (this DOES work for standalone server.js)
+export HOSTNAME=0.0.0.0
+exec node /app/.next/standalone/server.js
