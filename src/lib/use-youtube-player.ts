@@ -107,12 +107,17 @@ export function useYouTubePlayer({
       }
 
       console.log('[YouTube] Creating player with videoId:', videoId)
+      // YouTube API requires a valid videoId at init time. When we have no
+      // video yet, use a known-good placeholder video (a blank/silent video).
+      // The video will be replaced via loadVideoById() when the user picks a song.
+      const PLACEHOLDER_VIDEO_ID = 'M7lc1UVf-VE' // YouTube API demo video (always exists, embeddable)
+      const initialVideoId = videoId || PLACEHOLDER_VIDEO_ID
       playerRef.current = new window.YT.Player(containerRef.current, {
         height: '100%',
         width: '100%',
-        videoId: videoId || undefined,
+        videoId: initialVideoId,
         playerVars: {
-          autoplay: autoplay ? 1 : 0,
+          autoplay: 0, // never autoplay at init — we control playback explicitly
           controls: 1,
           modestbranding: 1,
           rel: 0,
@@ -125,6 +130,9 @@ export function useYouTubePlayer({
             setIsReady(true)
             try {
               playerRef.current.setVolume(volume * 100)
+              // Pause immediately — we don't want the placeholder to play
+              playerRef.current.pauseVideo()
+              playerRef.current.seekTo(0, true)
             } catch {}
             onReadyRef.current?.()
           },
@@ -156,14 +164,23 @@ export function useYouTubePlayer({
 
   // Load new video when videoId changes
   useEffect(() => {
-    if (!isReady || !playerRef.current || !videoId) return
+    if (!isReady || !playerRef.current) {
+      console.log('[YouTube] Load video skipped — not ready or no player', { isReady, hasPlayer: !!playerRef.current, videoId })
+      return
+    }
+    if (!videoId) {
+      console.log('[YouTube] No videoId, pausing player')
+      try {
+        playerRef.current.pauseVideo()
+      } catch {}
+      return
+    }
+    console.log('[YouTube] Loading video:', videoId)
     try {
       playerRef.current.loadVideoById(videoId)
-      if (autoplay) {
-        playerRef.current.playVideo()
-      }
+      // Note: autoplay is handled by the isPlaying effect in sticky-player.tsx
     } catch (e) {
-      console.warn('Failed to load video:', e)
+      console.warn('[YouTube] Failed to load video:', e)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, isReady])
