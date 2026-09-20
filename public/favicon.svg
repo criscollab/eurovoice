@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="v" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e0e7ff"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded square background with gradient -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Stylized "V" representing Voice -->
+  <path d="M18 20 L28 20 L32 36 L36 20 L46 20 L36 48 L28 48 Z" fill="url(#v)"/>
+  <!-- Sound waves on the right side -->
+  <circle cx="50" cy="34" r="2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="54" cy="34" r="1.5" fill="#ffffff" opacity="0.4"/>
+</svg>

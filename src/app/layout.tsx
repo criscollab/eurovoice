@@ -15,6 +15,16 @@ export const metadata: Metadata = {
   authors: [{ name: "Euro Voice" }],
   openGraph: { title: "Euro Voice", description: "Radio online multi-emisora 24/7", type: "website" },
   twitter: { card: "summary_large_image", title: "Euro Voice", description: "Radio online multi-emisora 24/7" },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180' },
+    ],
+  },
 };
 
 const googleTranslateInit = `
