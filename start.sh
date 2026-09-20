@@ -1,5 +1,5 @@
 #!/bin/sh
-# Railway start script — v4 using exec for proper PID 1 handling
+# Railway start script — v5 final
 echo "=========================================="
 echo "=== Railway Start Debug ==="
 echo "NODE_ENV: ${NODE_ENV:-(empty)}"
@@ -29,17 +29,19 @@ if [ -z "$PORT" ]; then
   export PORT=3000
 fi
 
+# Next.js 16 uses HOSTNAME env var (not -H flag) to bind to a specific interface
+export HOSTNAME=0.0.0.0
+
 echo "=== Files in /app/db ==="
 ls -la /app/db 2>&1
 echo "=========================================="
 echo "=== Starting Next.js ==="
-echo "PORT=$PORT NODE_ENV=$NODE_ENV"
-echo "Using: exec ./node_modules/.bin/next start -H 0.0.0.0 -p $PORT"
+echo "PORT=$PORT NODE_ENV=$NODE_ENV HOSTNAME=$HOSTNAME"
+echo "Using: exec ./node_modules/.bin/next start -p $PORT"
 echo "=========================================="
 
 # CRITICAL: Use exec to replace this shell with Next.js.
 # This makes Next.js PID 1 in the container, which is what Railway expects.
 # Railway sends SIGTERM to PID 1 for graceful shutdown.
-# Without exec, Next.js runs as a background process and when the parent
-# shell exits (for any reason), Next.js gets killed.
-exec ./node_modules/.bin/next start -H 0.0.0.0 -p "$PORT"
+# Next.js 16 reads HOSTNAME env var to bind to 0.0.0.0
+exec ./node_modules/.bin/next start -p "$PORT"
