@@ -1,5 +1,6 @@
-#!/bin/sh
-# Railway start script — v9 for PostgreSQL (no SQLite path forcing)
+#!/bin/bash
+# Railway start script — v10 using bash (sh doesn't support ${VAR:-default})
+
 echo "=========================================="
 echo "=== Railway Start Debug ==="
 echo "NODE_ENV: ${NODE_ENV:-(empty)}"
@@ -18,15 +19,14 @@ if [ -z "$DATABASE_URL" ]; then
   exit 1
 fi
 
-# If DATABASE_URL doesn't start with postgresql://, fail with clear message
+# If DATABASE_URL doesn't start with postgresql://, convert it
 case "$DATABASE_URL" in
   postgresql://*)
-    echo "✓ DATABASE_URL is a PostgreSQL URL"
+    echo "DATABASE_URL is a valid PostgreSQL URL"
     ;;
   postgres://*)
-    # Convert postgres:// to postgresql:// for Prisma compatibility
     export DATABASE_URL="postgresql://${DATABASE_URL#postgres://}"
-    echo "✓ Converted postgres:// to postgresql://"
+    echo "Converted postgres:// to postgresql://"
     ;;
   *)
     echo "ERROR: DATABASE_URL must be a PostgreSQL URL (starting with 'postgresql://')"
@@ -37,7 +37,7 @@ esac
 
 echo "=== Running prisma db push to initialize database ==="
 cd /app
-npx prisma db push --accept-data-loss 2>&1 | tail -10
+npx prisma db push --accept-data-loss 2>&1 | tail -15
 echo "=========================================="
 
 # If PORT is not set, default to 3000
@@ -53,7 +53,7 @@ echo "PORT=$PORT NODE_ENV=$NODE_ENV HOSTNAME=0.0.0.0"
 echo "Using: exec node .next/standalone/server.js"
 echo "=========================================="
 
-# Copy static assets to standalone dir (Next.js standalone doesn't include them by default)
+# Copy static assets to standalone dir
 if [ -d /app/public ]; then
   cp -r /app/public /app/.next/standalone/public 2>/dev/null || true
 fi
