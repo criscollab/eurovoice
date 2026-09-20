@@ -42,6 +42,15 @@ coverage/
 .zscripts/
 scripts/test-*.ts
 /tmp/
+Caddyfile
+bun.lock
+agent-ctx/
+mini-services/
+examples/
+skills/
+tool-results/
+tests/
+dev.pid
 
 # OS
 .DS_Store
