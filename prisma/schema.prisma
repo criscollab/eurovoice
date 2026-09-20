@@ -26,12 +26,13 @@ model Song {
   id          String   @id @default(cuid())
   title       String
   artist      String
-  audioUrl    String
+  audioUrl    String   @default("") // kept for backwards compat; no longer required for YouTube embed mode
   duration    Int      @default(180) // duration in seconds
   coverUrl    String?
-  // Optional YouTube URL for the music video. If set, a YouTube button appears
-  // in the player that opens the video in a new tab. Manually set via admin panel.
-  youtubeUrl  String?
+  // Required YouTube URL — Euro Voice now uses YouTube embed mode for legal
+  // playback of any song (commercial or CC). The video plays directly from
+  // YouTube, so artists get their views and no copyright is infringed.
+  youtubeUrl  String
   order       Int      @default(0)
   playCount   Int      @default(0) // how many times this song has been played
   // Reaction counts — denormalized for fast reads. SongReaction rows are the

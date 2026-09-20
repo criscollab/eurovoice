@@ -68,9 +68,9 @@ export async function POST(req: NextRequest, { params }: Params) {
         { status: 400 }
       )
     }
-    if (!audioUrl || typeof audioUrl !== 'string' || !audioUrl.trim()) {
+    if (!youtubeUrl || typeof youtubeUrl !== 'string' || !youtubeUrl.trim()) {
       return NextResponse.json(
-        { error: 'La URL del audio es obligatoria' },
+        { error: 'La URL de YouTube es obligatoria' },
         { status: 400 }
       )
     }
@@ -91,10 +91,10 @@ export async function POST(req: NextRequest, { params }: Params) {
       data: {
         title: title.trim(),
         artist: typeof artist === 'string' ? artist.trim() : 'Artista desconocido',
-        audioUrl: audioUrl.trim(),
+        audioUrl: typeof audioUrl === 'string' && audioUrl.trim() ? audioUrl.trim() : '',
         duration: typeof duration === 'number' && duration > 0 ? Math.floor(duration) : 180,
         coverUrl: typeof coverUrl === 'string' && coverUrl.trim() ? coverUrl.trim() : null,
-        youtubeUrl: typeof youtubeUrl === 'string' && youtubeUrl.trim() ? youtubeUrl.trim() : null,
+        youtubeUrl: youtubeUrl.trim(),
         order: nextOrder,
         stationId: id,
       },

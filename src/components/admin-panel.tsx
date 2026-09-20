@@ -153,7 +153,7 @@ export function AdminPanel() {
   // === Song mutations ===
   const handleAddSong = async (
     stationId: string,
-    data: { title: string; artist?: string; audioUrl: string; duration?: number; coverUrl?: string }
+    data: { title: string; artist?: string; audioUrl?: string; duration?: number; coverUrl?: string; youtubeUrl: string }
   ) => {
     try {
       const res = await fetch(`/api/stations/${stationId}/songs`, {
@@ -371,7 +371,7 @@ function StationAdminCard({
   onMoveStation: (dir: -1 | 1) => void
   onEdit: () => void
   onDelete: () => void
-  onAddSong: (data: { title: string; artist?: string; audioUrl: string; duration?: number; coverUrl?: string }) => void
+  onAddSong: (data: { title: string; artist?: string; audioUrl?: string; duration?: number; coverUrl?: string; youtubeUrl: string }) => void
   onMoveSong: (index: number, dir: -1 | 1) => void
   onDeleteSong: (songId: string) => void
   onUpdateSong: (songId: string, data: Partial<Song>) => void
@@ -786,7 +786,7 @@ function AddSongDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: { title: string; artist?: string; audioUrl: string; duration?: number; coverUrl?: string; youtubeUrl?: string }) => void
+  onSubmit: (data: { title: string; artist?: string; audioUrl?: string; duration?: number; coverUrl?: string; youtubeUrl: string }) => void
   accent: string
   stationId: string
 }) {
@@ -798,14 +798,14 @@ function AddSongDialog({
   const [youtubeUrl, setYoutubeUrl] = useState('')
 
   const handleSubmit = () => {
-    if (!title.trim() || !audioUrl.trim()) return
+    if (!title.trim() || !youtubeUrl.trim()) return
     onSubmit({
       title: title.trim(),
       artist: artist.trim() || undefined,
-      audioUrl: audioUrl.trim(),
+      audioUrl: audioUrl.trim() || undefined,
       duration,
       coverUrl: coverUrl.trim() || undefined,
-      youtubeUrl: youtubeUrl.trim() || undefined,
+      youtubeUrl: youtubeUrl.trim(),
     })
     setTitle('')
     setArtist('')
@@ -821,7 +821,7 @@ function AddSongDialog({
         <DialogHeader>
           <DialogTitle>Agregar canción</DialogTitle>
           <DialogDescription>
-            Sube un archivo MP3 o pega una URL externa. La canción se añadirá al final de la cola.
+            Pega la URL de YouTube de la canción. Euro Voice reproduce videos de YouTube directamente (modo embed), por lo que es 100% legal y los artistas reciben las reproducciones.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
@@ -841,40 +841,33 @@ function AddSongDialog({
               placeholder="Nombre del artista"
             />
           </div>
-          <SongUploader
-            url={audioUrl}
-            duration={duration}
-            onUrlChange={setAudioUrl}
-            onDurationChange2={setDuration}
-            stationId={stationId}
-          />
+          <div className="space-y-2">
+            <Label>URL de YouTube *</Label>
+            <Input
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=… o https://youtu.be/…"
+              type="url"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Pega el enlace del video de YouTube. Euro Voice lo reproducirá en modo embed (legal bajo los Términos de Servicio de YouTube).
+            </p>
+          </div>
           <div className="space-y-2">
             <Label>URL de la portada (opcional)</Label>
             <Input
               value={coverUrl}
               onChange={(e) => setCoverUrl(e.target.value)}
-              placeholder="https://…/portada.jpg"
+              placeholder="https://…/portada.jpg — si lo dejas vacío, se usa la miniatura de YouTube"
               type="url"
             />
-          </div>
-          <div className="space-y-2">
-            <Label>URL de YouTube (opcional)</Label>
-            <Input
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=…"
-              type="url"
-            />
-            <p className="text-[11px] text-muted-foreground">
-              Si la añades, aparecerá un botón de YouTube en el reproductor para que los oyentes puedan ver el videoclip.
-            </p>
           </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button
             onClick={handleSubmit}
-            disabled={!title.trim() || !audioUrl.trim()}
+            disabled={!title.trim() || !youtubeUrl.trim()}
             style={{ background: accent, color: '#ffffff' }}
           >
             Agregar
@@ -905,7 +898,7 @@ function EditSongDialog({
 }) {
   const [title, setTitle] = useState(song.title)
   const [artist, setArtist] = useState(song.artist)
-  const [audioUrl, setAudioUrl] = useState(song.audioUrl)
+  const [audioUrl, setAudioUrl] = useState(song.audioUrl || '')
   const [duration, setDuration] = useState(song.duration)
   const [youtubeUrl, setYoutubeUrl] = useState(song.youtubeUrl || '')
 
@@ -925,15 +918,8 @@ function EditSongDialog({
             <Label>Artista</Label>
             <Input value={artist} onChange={(e) => setArtist(e.target.value)} />
           </div>
-          <SongUploader
-            url={audioUrl}
-            duration={duration}
-            onUrlChange={setAudioUrl}
-            onDurationChange2={setDuration}
-            stationId={stationId}
-          />
           <div className="space-y-2">
-            <Label>URL de YouTube (opcional)</Label>
+            <Label>URL de YouTube *</Label>
             <Input
               value={youtubeUrl}
               onChange={(e) => setYoutubeUrl(e.target.value)}
@@ -941,7 +927,7 @@ function EditSongDialog({
               type="url"
             />
             <p className="text-[11px] text-muted-foreground">
-              Si la añades, aparecerá un botón de YouTube en el reproductor para que los oyentes puedan ver el videoclip.
+              Euro Voice reproduce el video de YouTube directamente en modo embed (legal).
             </p>
           </div>
         </div>
@@ -949,6 +935,7 @@ function EditSongDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button
             onClick={() => onSubmit({ title, artist, audioUrl, duration, youtubeUrl: youtubeUrl.trim() || null })}
+            disabled={!youtubeUrl.trim()}
             style={{ background: accent, color: '#ffffff' }}
           >
             Guardar

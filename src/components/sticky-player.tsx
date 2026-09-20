@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRadioStore } from '@/lib/radio-store'
 import { formatTime, getNextSongIndex, getPreviousSongIndex } from '@/lib/radio'
-import { normalizeYouTubeUrl } from '@/lib/youtube'
+import { parseYouTubeUrl, normalizeYouTubeUrl } from '@/lib/youtube'
+import { useYouTubePlayer } from '@/lib/use-youtube-player'
 import { AlbumArt } from '@/components/album-art'
 import { ReactionButtons } from '@/components/reaction-buttons'
 import { EqualizerBars } from '@/components/equalizer-bars'
@@ -22,20 +23,22 @@ import {
   ListMusic,
   Radio,
   Youtube,
+  Expand,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { RepeatMode } from '@/lib/radio'
 
 /**
- * StickyPlayer
- * Personal-mode player with:
- *   - Play/pause
- *   - Previous / Next track
- *   - Repeat mode (off / all / one)
- *   - Volume control
- *   - Expandable playlist with clickable songs
+ * StickyPlayer (YouTube Embed Edition)
  *
- * No server-side 24/7 sync — each listener has their own queue.
+ * Personal-mode player using YouTube IFrame API:
+ *   - Plays videos directly from YouTube (100% legal, no copyright issues)
+ *   - Auto-advances when a video ends (radio feel)
+ *   - Sticky video visible at bottom of screen
+ *   - Click to expand to fullscreen
+ *   - Volume control, repeat mode, playlist panel
+ *
+ * Each listener has their own queue — no server-side sync.
  */
 export function StickyPlayer() {
   const {
@@ -55,12 +58,46 @@ export function StickyPlayer() {
     togglePlaylist,
   } = useRadioStore()
 
-  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [progress, setProgress] = useState(0)
+  const [duration, setDuration] = useState(0)
   const [loadingTrack, setLoadingTrack] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
-  const currentSong = currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null
+  const currentSong =
+    currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null
+
+  // Extract YouTube video ID from current song
+  const videoId = currentSong?.youtubeUrl
+    ? parseYouTubeUrl(currentSong.youtubeUrl)?.videoId ?? null
+    : null
+
+  // === Handle video end → auto-advance ===
+  const handleVideoEnd = useCallback(() => {
+    const nextIndex = getNextSongIndex(currentIndex, queue.length, repeatMode)
+    if (nextIndex === -1) {
+      setIsPlaying(false)
+      setProgress(0)
+    } else if (nextIndex === currentIndex) {
+      // Repeat one — replay same song
+      // The hook handles this internally by seeking to 0
+    } else {
+      setCurrentIndex(nextIndex)
+      setIsPlaying(true)
+    }
+  }, [currentIndex, queue.length, repeatMode, setCurrentIndex, setIsPlaying])
+
+  // === Handle time updates ===
+  const handleTimeUpdate = useCallback((current: number, dur: number) => {
+    setProgress(current)
+    if (dur > 0) setDuration(dur)
+  }, [])
+
+  const { containerRef, isReady, play, pause, setVolume: setPlayerVolume } = useYouTubePlayer({
+    videoId,
+    autoplay: false,
+    volume,
+    onEnded: handleVideoEnd,
+    onTimeUpdate: handleTimeUpdate,
+  })
 
   // === Load queue when station changes ===
   useEffect(() => {
@@ -96,112 +133,38 @@ export function StickyPlayer() {
     }
   }, [activeStation, setQueue, setCurrentIndex, setIsPlaying])
 
-  // === When currentIndex changes, load the new song ===
+  // === Loading indicator when switching songs ===
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio || !currentSong) return
-
-    Promise.resolve().then(() => {
-      setLoadingTrack(true)
-      setError(null)
-    })
-    audio.src = currentSong.audioUrl
-    audio.load()
-
-    const handleLoadedMetadata = () => {
-      setLoadingTrack(false)
-      if (isPlaying) {
-        audio.play().catch((e) => {
-          console.warn('Autoplay blocked:', e)
-          setIsPlaying(false)
-        })
-      }
-    }
-
-    const handleError = () => {
-      setError('No se pudo cargar el audio. Verifica la URL.')
-      setLoadingTrack(false)
-    }
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
-    audio.addEventListener('error', handleError)
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      audio.removeEventListener('error', handleError)
-    }
-     
+    if (!currentSong) return
+    setLoadingTrack(true)
+    const t = setTimeout(() => setLoadingTrack(false), 2000)
+    return () => clearTimeout(t)
   }, [currentSong?.id])
 
   // === Volume control ===
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume
-    }
-  }, [volume])
+    setPlayerVolume(volume)
+  }, [volume, setPlayerVolume])
 
   // === Play/pause control ===
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio || !currentSong) return
+    if (!isReady || !currentSong) return
     if (isPlaying) {
-      audio.play().catch((e) => {
-        console.warn('Play failed:', e)
-        setIsPlaying(false)
-      })
+      play()
     } else {
-      audio.pause()
+      pause()
     }
-     
-  }, [isPlaying])
+  }, [isPlaying, isReady, currentSong, play, pause])
 
-  // === Track time updates ===
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-    const onTimeUpdate = () => setProgress(audio.currentTime)
-    audio.addEventListener('timeupdate', onTimeUpdate)
-    return () => audio.removeEventListener('timeupdate', onTimeUpdate)
-  }, [])
-
-  // === When song ends, advance based on repeat mode ===
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio || !currentSong) return
-
-    const onEnded = () => {
-      const nextIndex = getNextSongIndex(currentIndex, queue.length, repeatMode)
-      if (nextIndex === -1) {
-        // End of queue, repeat off → stop
-        setIsPlaying(false)
-        setProgress(0)
-      } else if (nextIndex === currentIndex) {
-        // Repeat one → replay the same song
-        audio.currentTime = 0
-        audio.play().catch(() => {})
-      } else {
-        // Advance to next song
-        setCurrentIndex(nextIndex)
-        setIsPlaying(true)
-      }
-    }
-
-    audio.addEventListener('ended', onEnded)
-    return () => audio.removeEventListener('ended', onEnded)
-  }, [currentIndex, queue.length, repeatMode, currentSong, setCurrentIndex, setIsPlaying])
-
-  // === Track play count: when a song starts playing, increment its count ===
+  // === Track play count ===
   useEffect(() => {
     if (!currentSong || !isPlaying) return
-    // Fire and forget — we don't want to block playback if this fails
     fetch(`/api/songs/${currentSong.id}/play`, { method: 'POST' }).catch(() => {})
-     
   }, [currentSong?.id])
 
-  // === Track listener: register this browser as an active listener ===
+  // === Track listener heartbeat ===
   useEffect(() => {
     if (!activeStation || !isPlaying) return
-    // Get or create a sessionId in localStorage
     let sessionId = ''
     if (typeof window !== 'undefined') {
       sessionId = localStorage.getItem('eurovoice_session_id') || ''
@@ -210,7 +173,6 @@ export function StickyPlayer() {
         localStorage.setItem('eurovoice_session_id', sessionId)
       }
     }
-    // Send heartbeat every 30 seconds while playing
     const sendHeartbeat = () => {
       fetch('/api/listeners/heartbeat', {
         method: 'POST',
@@ -225,7 +187,7 @@ export function StickyPlayer() {
 
   // === Skip to next song ===
   const handleNext = useCallback(() => {
-    const next = getNextSongIndex(currentIndex, queue.length, 'all') // always advance when manually skipping
+    const next = getNextSongIndex(currentIndex, queue.length, 'all')
     if (next !== -1) {
       setCurrentIndex(next)
       setIsPlaying(true)
@@ -250,17 +212,31 @@ export function StickyPlayer() {
     [setCurrentIndex, setIsPlaying]
   )
 
+  // === Expand video to fullscreen ===
+  const handleExpand = useCallback(() => {
+    const iframe = containerRef.current?.querySelector('iframe')
+    if (iframe) {
+      try {
+        if (iframe.requestFullscreen) iframe.requestFullscreen()
+      } catch {}
+    }
+  }, [containerRef])
+
   if (!activeStation) return null
 
   const accent = activeStation.color
-  const totalDuration = currentSong?.duration ?? 1
+  const totalDuration = duration || currentSong?.duration || 1
 
   const repeatIcon = repeatMode === 'one' ? <Repeat1 className="h-4 w-4" /> : <Repeat className="h-4 w-4" />
   const repeatActive = repeatMode !== 'off'
 
   return (
     <>
-      <audio ref={audioRef} preload="auto" />
+      {/* YouTube player container — hidden, only used as API host */}
+      <div className="sr-only" aria-hidden="true">
+        <div ref={containerRef} />
+      </div>
+
       {/* Player container */}
       <div
         className={cn(
@@ -283,22 +259,41 @@ export function StickyPlayer() {
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:px-6">
           {/* Main row */}
           <div className="flex items-center gap-3 md:gap-5">
-            {/* Vinyl + cover */}
+            {/* YouTube video thumbnail (clickable to expand) */}
             <div className="flex shrink-0 items-center gap-3">
-              <AlbumArt
-                coverUrl={currentSong?.coverUrl ?? null}
-                spinning={isPlaying && !loadingTrack}
-                color={accent}
-                size={56}
-                className="md:hidden"
-              />
-              <AlbumArt
-                coverUrl={currentSong?.coverUrl ?? null}
-                spinning={isPlaying && !loadingTrack}
-                color={accent}
-                size={72}
-                className="hidden md:block"
-              />
+              <button
+                onClick={handleExpand}
+                className="relative h-14 w-20 overflow-hidden rounded-lg bg-black md:h-16 md:w-24"
+                aria-label="Expandir video a pantalla completa"
+                title="Expandir video"
+              >
+                {videoId ? (
+                  <img
+                    src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                    alt={currentSong?.title || 'YouTube video'}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Radio className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )}
+                {/* Play indicator overlay */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity hover:opacity-100">
+                  <Expand className="h-5 w-5 text-white" />
+                </div>
+                {/* Live indicator */}
+                {isPlaying && (
+                  <div className="absolute left-1 top-1 flex items-center gap-1 rounded-full bg-black/60 px-1.5 py-0.5">
+                    <span
+                      className="animate-live-pulse h-1 w-1 rounded-full"
+                      style={{ background: accent }}
+                    />
+                    <span className="text-[8px] font-bold uppercase text-white">LIVE</span>
+                  </div>
+                )}
+              </button>
+
               <div className="min-w-0 max-w-[180px] md:max-w-[280px]">
                 <div className="flex items-center gap-2">
                   <span
@@ -308,11 +303,8 @@ export function StickyPlayer() {
                       background: `color-mix(in oklch, ${accent} 15%, transparent)`,
                     }}
                   >
-                    <span
-                      className="animate-live-pulse h-1.5 w-1.5 rounded-full"
-                      style={{ background: accent }}
-                    />
-                    En vivo
+                    <Youtube className="h-3 w-3" />
+                    YouTube
                   </span>
                   <span className="text-[10px] font-medium text-muted-foreground">
                     {activeStation.name}
@@ -326,15 +318,13 @@ export function StickyPlayer() {
                     <p className="truncate text-xs text-muted-foreground">
                       {currentSong.artist}
                     </p>
-                    {/* Reaction buttons (desktop only — mobile shows them below the progress bar) */}
+                    {/* Reaction buttons (desktop only) */}
                     <div className="mt-1 hidden md:block">
                       <ReactionButtons songId={currentSong.id} accent={accent} />
                     </div>
                   </>
                 ) : (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Sin programación
-                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">Sin programación</p>
                 )}
               </div>
             </div>
@@ -357,7 +347,7 @@ export function StickyPlayer() {
                 {/* Play/Pause */}
                 <Button
                   onClick={togglePlay}
-                  disabled={!currentSong || loadingTrack}
+                  disabled={!currentSong || loadingTrack || !isReady}
                   className="h-12 w-12 rounded-full p-0"
                   style={{
                     background: accent,
@@ -419,7 +409,7 @@ export function StickyPlayer() {
                   <ListMusic className="h-4 w-4" />
                 </Button>
 
-                {/* YouTube button (only visible if the current song has a YouTube URL) */}
+                {/* Open in YouTube (new tab) */}
                 {currentSong?.youtubeUrl && (() => {
                   const normalized = normalizeYouTubeUrl(currentSong.youtubeUrl)
                   if (!normalized) return null
@@ -429,8 +419,8 @@ export function StickyPlayer() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                      aria-label="Ver videoclip en YouTube (abre en nueva pestaña)"
-                      title="Ver videoclip en YouTube (abre en nueva pestaña)"
+                      aria-label="Abrir en YouTube (nueva pestaña)"
+                      title="Abrir en YouTube"
                     >
                       <Youtube className="h-4 w-4" />
                     </a>
@@ -517,15 +507,11 @@ export function StickyPlayer() {
             </span>
           </div>
 
-          {/* Reaction buttons (mobile only — desktop shows them next to the song info) */}
+          {/* Reaction buttons (mobile only) */}
           {currentSong && (
             <div className="md:hidden">
               <ReactionButtons songId={currentSong.id} accent={accent} />
             </div>
-          )}
-
-          {error && (
-            <p className="text-xs text-destructive">{error}</p>
           )}
 
           {/* Expanded playlist panel */}
