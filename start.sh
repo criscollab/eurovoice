@@ -1,40 +1,52 @@
 #!/bin/sh
-# Railway start script — v8 using standalone server
+# Railway start script — v9 for PostgreSQL (no SQLite path forcing)
 echo "=========================================="
 echo "=== Railway Start Debug ==="
 echo "NODE_ENV: ${NODE_ENV:-(empty)}"
 echo "PORT: ${PORT:-(empty)}"
-echo "DATABASE_URL (before fix): ${DATABASE_URL:-(empty)}"
+echo "DATABASE_URL preview: ${DATABASE_URL:0:30}..."
 echo "PWD: $(pwd)"
 echo "=========================================="
 
 # Set NODE_ENV to production
 export NODE_ENV=production
 
-# Ensure database directory exists (for SQLite)
-mkdir -p /app/db
+# Verify DATABASE_URL is set (required for PostgreSQL)
+if [ -z "$DATABASE_URL" ]; then
+  echo "ERROR: DATABASE_URL is not set!"
+  echo "Please add DATABASE_URL in Railway Variables (from your PostgreSQL service)"
+  exit 1
+fi
 
-# Force an absolute path for DATABASE_URL
-export DATABASE_URL="file:/app/db/custom.db"
-echo "DATABASE_URL (after fix): $DATABASE_URL"
+# If DATABASE_URL doesn't start with postgresql://, fail with clear message
+case "$DATABASE_URL" in
+  postgresql://*)
+    echo "✓ DATABASE_URL is a PostgreSQL URL"
+    ;;
+  postgres://*)
+    # Convert postgres:// to postgresql:// for Prisma compatibility
+    export DATABASE_URL="postgresql://${DATABASE_URL#postgres://}"
+    echo "✓ Converted postgres:// to postgresql://"
+    ;;
+  *)
+    echo "ERROR: DATABASE_URL must be a PostgreSQL URL (starting with 'postgresql://')"
+    echo "Current value: ${DATABASE_URL:0:30}..."
+    exit 1
+    ;;
+esac
 
-# Run prisma db push to create the schema
 echo "=== Running prisma db push to initialize database ==="
 cd /app
 npx prisma db push --accept-data-loss 2>&1 | tail -10
 echo "=========================================="
 
-# Use the PORT that Railway provides, default to 3000 if not set
+# If PORT is not set, default to 3000
 if [ -z "$PORT" ]; then
   export PORT=3000
-  echo "PORT was not set, using default: $PORT"
 fi
 
 echo "=== Files in /app ==="
-ls -la /app 2>&1 | head -30
-echo "=========================================="
-echo "=== Files in /app/.next/standalone ==="
-ls -la /app/.next/standalone 2>&1 | head -30
+ls -la /app 2>&1 | head -10
 echo "=========================================="
 echo "=== Starting Next.js (standalone) ==="
 echo "PORT=$PORT NODE_ENV=$NODE_ENV HOSTNAME=0.0.0.0"
@@ -51,6 +63,5 @@ if [ -d /app/.next/static ]; then
 fi
 
 # Use exec with the standalone server
-# Set HOSTNAME=0.0.0.0 (this DOES work for standalone server.js)
 export HOSTNAME=0.0.0.0
 exec node /app/.next/standalone/server.js
