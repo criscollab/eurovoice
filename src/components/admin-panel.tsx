@@ -35,11 +35,13 @@ import {
   ArrowUp,
   ArrowDown,
   X,
+  Megaphone,
 } from 'lucide-react'
 import { formatTime } from '@/lib/radio'
 import { cn } from '@/lib/utils'
 import { SongUploader } from '@/components/song-uploader'
 import { AdminStats } from '@/components/admin-stats'
+import { PartnerManager } from '@/components/partner-manager'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { BarChart3 } from 'lucide-react'
 
@@ -284,7 +286,7 @@ export function AdminPanel() {
         <ScrollArea className="h-[calc(100vh-100px)]">
           <div className="p-6">
             <Tabs defaultValue="stations">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="stations" className="flex items-center gap-2">
                   <Music className="h-3.5 w-3.5" />
                   Emisoras ({loadedStations.length})
@@ -292,6 +294,10 @@ export function AdminPanel() {
                 <TabsTrigger value="stats" className="flex items-center gap-2">
                   <BarChart3 className="h-3.5 w-3.5" />
                   Estadísticas
+                </TabsTrigger>
+                <TabsTrigger value="partner" className="flex items-center gap-2">
+                  <Megaphone className="h-3.5 w-3.5" />
+                  Socio
                 </TabsTrigger>
               </TabsList>
 
@@ -339,6 +345,10 @@ export function AdminPanel() {
 
               <TabsContent value="stats" className="mt-0">
                 <AdminStats />
+              </TabsContent>
+
+              <TabsContent value="partner" className="mt-0">
+                <PartnerManager />
               </TabsContent>
             </Tabs>
           </div>
