@@ -86,27 +86,13 @@ export function useYouTubePlayer({
   // Initialize player once API is loaded
   useEffect(() => {
     let cancelled = false
-    console.log('[YouTube] Initializing player, loading API...')
     loadYouTubeAPI().then(() => {
-      if (cancelled) {
-        console.log('[YouTube] Cancelled before API loaded')
-        return
-      }
-      if (!containerRef.current) {
-        console.error('[YouTube] containerRef.current is null — cannot create player')
-        return
-      }
-      if (!window.YT?.Player) {
-        console.error('[YouTube] YT.Player not available after API load')
-        return
-      }
+      if (cancelled) return
+      if (!containerRef.current) return
+      if (!window.YT?.Player) return
       // Already initialized
-      if (playerRef.current) {
-        console.log('[YouTube] Player already exists, skipping init')
-        return
-      }
+      if (playerRef.current) return
 
-      console.log('[YouTube] Creating player with videoId:', videoId)
       // YouTube API requires a valid videoId at init time. When we have no
       // video yet, use a known-good placeholder video (a blank/silent video).
       // The video will be replaced via loadVideoById() when the user picks a song.
@@ -126,7 +112,6 @@ export function useYouTubePlayer({
         events: {
           onReady: () => {
             if (cancelled) return
-            console.log('[YouTube] Player ready!')
             setIsReady(true)
             try {
               playerRef.current.setVolume(volume * 100)
@@ -137,7 +122,6 @@ export function useYouTubePlayer({
             onReadyRef.current?.()
           },
           onStateChange: (event: any) => {
-            console.log('[YouTube] State change:', event.data)
             // YT.PlayerState.ENDED = 0
             if (event.data === 0) {
               onEndedRef.current?.()
@@ -164,18 +148,13 @@ export function useYouTubePlayer({
 
   // Load new video when videoId changes
   useEffect(() => {
-    if (!isReady || !playerRef.current) {
-      console.log('[YouTube] Load video skipped — not ready or no player', { isReady, hasPlayer: !!playerRef.current, videoId })
-      return
-    }
+    if (!isReady || !playerRef.current) return
     if (!videoId) {
-      console.log('[YouTube] No videoId, pausing player')
       try {
         playerRef.current.pauseVideo()
       } catch {}
       return
     }
-    console.log('[YouTube] Loading video:', videoId)
     try {
       playerRef.current.loadVideoById(videoId)
       // Note: autoplay is handled by the isPlaying effect in sticky-player.tsx
