@@ -100,3 +100,23 @@ model ListenerSession {
   @@index([lastSeenAt])
   @@index([stationId])
 }
+
+/**
+ * Partner
+ * Stores a single advertising partner (cross-promotion).
+ *
+ * The active partner's banner is displayed at the top of the page.
+ * When users click the banner image, they're taken to the partner's linkUrl.
+ *
+ * Only ONE partner can be active at a time (the banner shows just one image).
+ * To switch partners, deactivate the current one and activate another.
+ */
+model Partner {
+  id          String   @id @default(cuid())
+  name        String   // Display name (for admin panel identification)
+  imageUrl    String   // URL of the banner image (hosted externally — imgur, cloudinary, etc.)
+  linkUrl     String   // URL to open when the banner is clicked
+  active      Boolean  @default(true) // Only active partners are shown
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

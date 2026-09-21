@@ -12,6 +12,7 @@ import { SearchBar } from '@/components/search-bar'
 import { SupportDialog } from '@/components/support-dialog'
 import { StillListeningPrompt } from '@/components/still-listening-prompt'
 import { LanguageSelector } from '@/components/language-selector'
+import { PartnerBanner } from '@/components/partner-banner'
 import { Button } from '@/components/ui/button'
 import { Radio, Music2, Headphones, Waves, Globe2, Info, Heart, SearchX } from 'lucide-react'
 
@@ -60,6 +61,9 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col">
+      {/* === Partner Banner (top of page) === */}
+      <PartnerBanner />
+
       {/* === Header === */}
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2 md:gap-4 md:px-6 md:py-3">
