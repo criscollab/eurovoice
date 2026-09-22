@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Users, Music2, Headphones, TrendingUp, Radio, RefreshCw } from 'lucide-react'
+import { Users, Music2, Headphones, TrendingUp, Radio, RefreshCw, ThumbsUp, Heart, ThumbsDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ListenerStats {
@@ -23,6 +23,22 @@ interface TopSong {
   duration: number
 }
 
+interface ReactionSong {
+  id: string
+  title: string
+  artist: string
+  coverUrl: string | null
+  count: number
+  stationName: string
+  stationColor: string
+}
+
+interface ReactionStats {
+  topLiked: ReactionSong[]
+  topHearted: ReactionSong[]
+  topDisliked: ReactionSong[]
+}
+
 /**
  * AdminStats
  * Statistics view shown in the admin panel. Polls /api/stats/listeners every
@@ -32,8 +48,10 @@ interface TopSong {
 export function AdminStats() {
   const [listenerStats, setListenerStats] = useState<ListenerStats | null>(null)
   const [topSongs, setTopSongs] = useState<TopSong[]>([])
+  const [reactionStats, setReactionStats] = useState<ReactionStats | null>(null)
   const [loadingListeners, setLoadingListeners] = useState(true)
   const [loadingSongs, setLoadingSongs] = useState(true)
+  const [loadingReactions, setLoadingReactions] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const fetchListenerStats = async () => {
@@ -69,22 +87,47 @@ export function AdminStats() {
     }
   }
 
+  const fetchReactionStats = async () => {
+    try {
+      const res = await fetch('/api/stats/reactions?limit=10', { cache: 'no-store' })
+      if (!res.ok) throw new Error('Failed to fetch')
+      const data = await res.json()
+      setReactionStats(data)
+    } catch {
+      // ignore
+    } finally {
+      setLoadingReactions(false)
+    }
+  }
+
   useEffect(() => {
     fetchListenerStats()
     fetchTopSongs()
+    fetchReactionStats()
 
     // Poll listeners every 5 seconds
     const listenerInterval = setInterval(fetchListenerStats, 5000)
     // Poll top songs every 30 seconds
     const songsInterval = setInterval(fetchTopSongs, 30000)
+    // Poll reactions every 60 seconds (less frequent — they change slower)
+    const reactionsInterval = setInterval(fetchReactionStats, 60000)
 
     return () => {
       clearInterval(listenerInterval)
       clearInterval(songsInterval)
+      clearInterval(reactionsInterval)
     }
   }, [])
 
   const maxPlayCount = topSongs.length > 0 ? topSongs[0].playCount : 1
+
+  // Compute totals for reactions
+  const totalLikes =
+    reactionStats?.topLiked.reduce((sum, s) => sum + s.count, 0) ?? 0
+  const totalHearts =
+    reactionStats?.topHearted.reduce((sum, s) => sum + s.count, 0) ?? 0
+  const totalDislikes =
+    reactionStats?.topDisliked.reduce((sum, s) => sum + s.count, 0) ?? 0
 
   return (
     <div className="space-y-4">
@@ -240,6 +283,154 @@ export function AdminStats() {
           )}
         </CardContent>
       </Card>
+
+      {/* === Reactions section === */}
+      {/* Totals cards */}
+      <div className="grid grid-cols-3 gap-2">
+        <Card className="border-border/60">
+          <CardHeader className="pb-1">
+            <CardTitle className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              <ThumbsUp className="h-3 w-3 text-blue-500" />
+              Likes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <span className="text-2xl font-bold text-foreground">
+              {loadingReactions ? '—' : totalLikes}
+            </span>
+          </CardContent>
+        </Card>
+        <Card className="border-border/60">
+          <CardHeader className="pb-1">
+            <CardTitle className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              <Heart className="h-3 w-3 text-pink-500 fill-pink-500" />
+              Corazones
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <span className="text-2xl font-bold text-foreground">
+              {loadingReactions ? '—' : totalHearts}
+            </span>
+          </CardContent>
+        </Card>
+        <Card className="border-border/60">
+          <CardHeader className="pb-1">
+            <CardTitle className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              <ThumbsDown className="h-3 w-3 text-red-500" />
+              No me gusta
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <span className="text-2xl font-bold text-foreground">
+              {loadingReactions ? '—' : totalDislikes}
+            </span>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top liked songs */}
+      <ReactionList
+        title="Canciones más gustadas"
+        icon={<ThumbsUp className="h-4 w-4 text-blue-500" />}
+        songs={reactionStats?.topLiked ?? []}
+        loading={loadingReactions}
+        accentColor="text-blue-500"
+        emptyMessage="Aún no hay canciones con likes"
+      />
+
+      {/* Top hearted songs */}
+      <ReactionList
+        title="Canciones más amadas"
+        icon={<Heart className="h-4 w-4 text-pink-500 fill-pink-500" />}
+        songs={reactionStats?.topHearted ?? []}
+        loading={loadingReactions}
+        accentColor="text-pink-500"
+        emptyMessage="Aún no hay canciones con corazones"
+      />
+
+      {/* Top disliked songs */}
+      <ReactionList
+        title="Canciones menos gustadas"
+        icon={<ThumbsDown className="h-4 w-4 text-red-500" />}
+        songs={reactionStats?.topDisliked ?? []}
+        loading={loadingReactions}
+        accentColor="text-red-500"
+        emptyMessage="Aún no hay canciones con 'no me gusta'"
+      />
     </div>
+  )
+}
+
+/**
+ * ReactionList
+ * Reusable component for displaying a list of songs by reaction type.
+ */
+function ReactionList({
+  title,
+  icon,
+  songs,
+  loading,
+  accentColor,
+  emptyMessage,
+}: {
+  title: string
+  icon: React.ReactNode
+  songs: ReactionSong[]
+  loading: boolean
+  accentColor: string
+  emptyMessage: string
+}) {
+  const maxCount = songs.length > 0 ? songs[0].count : 1
+
+  return (
+    <Card className="border-border/60">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          {icon}
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {loading ? (
+          <p className="py-4 text-center text-xs text-muted-foreground">Cargando…</p>
+        ) : songs.length === 0 ? (
+          <p className="py-4 text-center text-xs text-muted-foreground">
+            {emptyMessage}
+          </p>
+        ) : (
+          <ScrollArea className="max-h-60">
+            <ol className="space-y-1">
+              {songs.map((song, i) => {
+                const pct = (song.count / maxCount) * 100
+                return (
+                  <li key={song.id} className="relative overflow-hidden rounded-md px-2 py-1.5">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-current opacity-10"
+                      style={{ width: `${pct}%`, color: song.stationColor }}
+                    />
+                    <div className="relative flex items-center gap-3">
+                      <span className="w-5 text-center text-[10px] tabular-nums text-muted-foreground">
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-foreground">
+                          {song.title}
+                        </p>
+                        <p className="truncate text-[10px] text-muted-foreground">
+                          {song.artist} · {song.stationName}
+                        </p>
+                      </div>
+                      <span className={cn('font-semibold tabular-nums text-xs', accentColor)}>
+                        {song.count}
+                      </span>
+                    </div>
+                  </li>
+                )
+              })}
+            </ol>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
   )
 }
