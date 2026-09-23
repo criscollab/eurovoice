@@ -18,7 +18,10 @@ interface Partner {
  * site in a new tab.
  *
  * Only shows when there's an active partner (fetched from /api/partners).
- * Hidden on mobile screens (banner doesn't fit well on small screens).
+ *
+ * Responsive:
+ *   - Desktop (md+): full banner up to 728px wide, 60px tall
+ *   - Mobile (<md): smaller banner, fits screen width, 40px tall
  */
 export function PartnerBanner() {
   const [partner, setPartner] = useState<Partner | null>(null)
@@ -47,20 +50,20 @@ export function PartnerBanner() {
   if (loading || !partner) return null
 
   return (
-    <div className="hidden w-full bg-gradient-to-r from-slate-50 to-slate-100 border-b border-border/40 md:block">
-      <div className="mx-auto flex max-w-7xl items-center justify-center px-4 py-2">
+    <div className="w-full bg-gradient-to-r from-slate-50 to-slate-100 border-b border-border/40">
+      <div className="mx-auto flex max-w-7xl items-center justify-center px-2 py-1.5 md:px-4 md:py-2">
         <a
           href={partner.linkUrl}
           target="_blank"
           rel="noopener noreferrer sponsored"
-          className="block max-w-[728px] flex-1 transition-opacity hover:opacity-90"
+          className="block flex-1 transition-opacity hover:opacity-90"
           title={`Visita: ${partner.name}`}
           aria-label={`Anuncio de ${partner.name} — abrir en nueva pestaña`}
         >
           <img
             src={partner.imageUrl}
             alt={`Anuncio de ${partner.name}`}
-            className="mx-auto h-[60px] w-auto max-w-full rounded-md object-contain"
+            className="mx-auto h-[40px] w-auto max-w-full rounded-md object-contain md:h-[60px]"
             loading="lazy"
           />
         </a>
