@@ -1,5 +1,5 @@
 #!/bin/bash
-# Railway start script — v10 using bash (sh doesn't support ${VAR:-default})
+# Railway start script — v11 with robust static asset copying
 
 echo "=========================================="
 echo "=== Railway Start Debug ==="
@@ -48,18 +48,31 @@ fi
 echo "=== Files in /app ==="
 ls -la /app 2>&1 | head -10
 echo "=========================================="
+echo "=== Files in /app/public ==="
+ls -la /app/public 2>&1
+echo "=========================================="
+echo "=== Files in /app/public/banners ==="
+ls -la /app/public/banners 2>&1
+echo "=========================================="
 echo "=== Starting Next.js (standalone) ==="
 echo "PORT=$PORT NODE_ENV=$NODE_ENV HOSTNAME=0.0.0.0"
 echo "Using: exec node .next/standalone/server.js"
 echo "=========================================="
 
-# Copy static assets to standalone dir
-if [ -d /app/public ]; then
-  cp -r /app/public /app/.next/standalone/public 2>/dev/null || true
-fi
+# Copy static assets to standalone dir (FORCE MERGE — copy banners/ etc.)
+echo "=== Syncing /app/public to /app/.next/standalone/public ==="
+mkdir -p /app/.next/standalone/public
+# Use cp -rf to force overwrite/merge, so new banners replace old ones
+cp -rf /app/public/* /app/.next/standalone/public/ 2>&1 | head -5
+echo "Files in /app/.next/standalone/public:"
+ls -la /app/.next/standalone/public 2>&1
+echo "Files in /app/.next/standalone/public/banners:"
+ls -la /app/.next/standalone/public/banners 2>&1 || echo "(no banners dir found)"
+echo "=========================================="
+
 if [ -d /app/.next/static ]; then
   mkdir -p /app/.next/standalone/.next
-  cp -r /app/.next/static /app/.next/standalone/.next/static 2>/dev/null || true
+  cp -rf /app/.next/static /app/.next/standalone/.next/static 2>&1 | head -5
 fi
 
 # Use exec with the standalone server
